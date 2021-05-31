@@ -1,0 +1,259 @@
+# TODO: replace references str() with ref(host.field)
+# TODO: display name for each item
+
+# Locally stored data
+local_data:
+  id: str()                               # ID of schematic
+  name: str()                             # Name of schematic
+  schematic: include('schematic_opstack') # Schematic itself
+  last_saved: num(min=0.0, required=False)   # Time when data were last saved on remote storage    [default:None]
+  timestamp: num(min=0.0, required=False)    # Local data timestamp                                [default:None]
+
+  unsaved_changes: bool()   # True if there is local changes that haven't been saved to remote storage
+  cache: bool()             # If True then it's just a cache of remote data and can be freely removed from local storage
+
+  # Data to recover view after loading
+  current_pos: list(int(), min=2,max=2, required=False, none=False)                       # Current center position  [default:None]
+  current_view: str(required=False, none=False)                                           # Current view             [default:'schematic']    [ref:schematic_view:name]
+  current_frame: list(list(int(min=2, max=2)), min=4, max=4, required=False, none=False)  # Current frame boundaries [default:None]
+  current_scale: num(required=False, none=False)                                          # Current scale            [default:None]
+
+---
+# Remotely stored data (server response)
+remote_data:
+  id: str()                               # ID of schematic
+  name: str()                             # Name of schematic
+  data: include('schematic_opstack')      # Schematic itself
+  last_saved: num(min=0.0)                # Time when data were last saved on remote storage
+
+  preview_data: include('preview_data')   # Data for schematic preview
+
+  locked: bool()                          # True if schematic is locked from changes (on remote storage)
+  hidden: bool()                          # True if schematic is hidden by owner from anyone else
+  public: bool()                          # True if schematic is published
+  allow_clone: bool()                     # True if owner allows to clone schematic by other users
+  metadata: include('remote_metadata')    # Metadata for schematic
+  views: int(min=0)                       # Total views of this schematic
+---
+# Data for preview
+preview_data:
+  TODO: str() # TODO: define preview data
+---
+# Remotely stored metadata (server response)
+remote_metadata:
+  TODO: str() # TODO: define remote metadata
+---
+# Schematic data
+# Consists of
+#   current state
+#   initial state
+#   history to get from initial state to current state (and probably even further in case if current state is not last)
+schematic_opstack:
+  op_data: include('schematic_data')                            # Current state data
+  op_n: int(min=0)                                              # Current state index in stack of ops
+  ops: list(include('schematic_op'))                            # Stack of ops (aka history)
+  default_data: include('schematic_data')                       # Initial state data
+---
+# Schematic operation record
+# Contains list of changes to get into previous state (Forward,  aka Undo)
+# Contains list of changes to get into next state     (Backward, aka Redo)
+schematic_op:
+  forward:  include('schematic_op_diff')
+  backward: include('schematic_op_diff')
+  metadata: include('schematic_op_metadata')
+---
+# Changes (diff) in schematic data
+schematic_op_diff:
+  add: include('schematic_data')                                # Added data
+  mod: include('schematic_data')                                # Modified data
+  del: include('schematic_data')                                # Removed data
+---
+# Metadata for operation over schematic
+schematic_op_metadata:
+  current_pos: list(int(), min=2,max=2, required=False, none=False) # Current center position                           [default:None]
+  current_view: str(required=False, none=False)                     # Current view  [ref:schematic_view:name]           [default:'schematic']
+  current_frame: list(list(int(min=2, max=2)), min=4, max=4, required=False, none=False) # Current frame boundaries     [default:None]
+  current_scale: num(required=False, none=False)                    # Current scale                                     [default:1.0]
+  user: str(required=False)                                         # Author's user ID (None if user wasn't logged in)  [default:None]
+  timestamp: num(min=0.0)                                           # Timestamp of this op
+---
+# Schematic data
+schematic_data:
+  generics: map(key=str())                                      # Schematic generics
+  constants: map(str(), key=str())                              # Expression to calculate constants to use later in schematic
+  items: map(include('schematic_instance_data'), key=str())     # Schematic items  # TODO: key should be unique and permanent
+  wires: map(include('schematic_wire_data'), key=str())         # Schematic wires  # TODO: what is key?
+  io: map(include('schematic_io_data'), key=str())              # Hierarchical schematic i/o
+  generate: map(include('schematic_data_generate'), key=str())  # Procedural schematic generation
+
+  # TODO: replace following
+  # schematic_placement: map(include('schematic_item_placement'), key=str())  # Placement for items on schematic views
+  # dashboard_placement: map(include('schematic_item_placement'), key=str())  # Placement for items on dashboard views
+  # with:
+  views: map(include('schematic_view'), key=str())              # Data for different schematic views
+  full_schematic_view: str()  # Name of view on which all elements are shown
+  # TODO: add implementation targets? target chain
+  integrations: map(include('schematic_integration'), key=str()) # Data for integrating other schems and sources of other kind
+  targets: map(include('schematic_target'), key=str())          # Data for targeting specific platform
+  publications: map(include('schematic_pub'), key=str())        # Info about used view, display area and schematic data* in publication. *which views should be available
+---
+# Info about used view, display area and schematic data* in publication. *which views should be available
+schematic_pub:
+  TODO: str() # TODO
+  view: str()                                                   # View that used in embedded mode
+  view_area: list(list(int(min=2,max=2)), min=4, max=4)         # Area in embedded mode [Top left -> Top right -> Bottom right -> Bottom left]
+  properties: map(key=str())  # TODO: properties for embedded view - what is target: display, simulation, exploration (task for specific score, modifications)
+  show_out_of_the_box: bool()                                   # Whether or not show items and wires outside view area in embedded mode [None:False]
+  published_views: map(key=str())                               # Views that should be available in extended mode (one that displayed on host site, not embedded mode)
+  # TODO: Properties for views - what is allowed - move items, modify totally, or if it's task with target score
+---
+# Procedural schematic generation  # TODO: think deeper, check SpinalHDL
+schematic_data_generate:
+  name: str()                                                   # Generate block name
+  condition: str(required=False, none=False)                    # Condition to determine whether block should exist       [default:None]
+  range: list(int(), min=2, max=3, required=False, none=False)  # Generate loop for integer range                         [default:None]
+  enum: list(required=False, none=False)                        # Generate loop for enumerated values                     [default:None]
+  content: include('schematic_data')                            # Content of generate block
+  wire_map: map(key=str())                                      # Mapping for wires of content to outer wires
+---
+# Info about schematic item instance
+schematic_instance_data:
+  name: str()         # Item's Origin in format: lib:item:version
+  customized: map()   # Item customization data (only non-default values) # TODO: should include ref des
+  # TODO: customized data for pins that were automatically derived from wire connection
+  attributes: map()   # Misc attributes (no ideas yet, probably - integration related)
+  import: include('schematic_item_integration')  # Forward integration with external source (importing into schematic)
+  export: list(str())    # Targets for one-way exporting from schematic to outer sources  [ref:schematic_data.targets]
+---
+# Info about schematic items connection
+schematic_wire_data:
+  # TODO: check against source code following: (isn't it a key?)
+  src: str()          # Wire source pin [ref:schematic_data.items.pin]
+  target: str()       # Wire target pin [ref:schematic_data.items.pin]
+
+  name: str()         # Optional wire name
+  bus: bool()         # True if wire is array (for multiple generated instances)
+
+  attributes: map()   # Misc attributes (no ideas yet, probably - integration related)
+  integration: include('schematic_wire_integration')  # Forward integration with external source (importing into schematic)
+---
+# Info about schematic hierarchical I/O
+schematic_io_data:
+  TODO: str() # TODO: dir/role, type/interface. Probably it's better to check Spinal HDL for ideas
+---
+# Data Integration settings
+schematic_integration:
+  name: str()                   # Display name of integration
+  host: str()                   # Host providing integration (URL)
+  host_options: map(key=str())  # Options for integration host (kwargs)
+  integration_options: include('integration_options')   # Options for external schematic integration - Blackbox/Cluster/Flattened/etc. (TODO: define integration_options class)
+  back_annotation:  include('back_annotation_general')  # Backward annotation capabilities for imported data
+
+  update_pending: bool()        # Update from source is pending
+
+  original_format: str()        # Original source format like VHDL, Verilog, etc.
+  original_data: str()          # Original source data    - used to pass into target if original format is compatible
+---
+# Integration info for item
+schematic_item_integration:
+  source: str()                                         # Integration source  [ref:schematic_data.integrations]
+  update_pending: bool()                                # Update from source is pending
+  deleted_on_source: bool()                             # Item is removed on the source
+  deleted_on_schematic: bool()                          # Item is removed on schematic
+  back_anno: include('back_annotation_general')         # Back annotation options personal for item
+  back_anno_pending: bool()                             # Back annotation is pending
+---
+# Integration info for wire
+schematic_wire_integration:
+  source: str()                                         # Integration source  [ref:schematic_data.integrations]
+  update_pending: bool()                                # Update from source is pending
+  deleted_on_source: bool()                             # Wire is removed on the source
+  deleted_on_schematic: bool()                          # Wire is removed on schematic
+  back_anno: include('back_annotation_general')         # Back annotation options personal for wire
+  back_anno_pending: bool()                             # Back annotation is pending
+---
+# General back annotation settings
+back_annotation_general:
+  add: bool()                                           # Item can be added
+  mod: bool()                                           # Item's modifications can be back annotated
+  del: bool()                                           # Item can be deleted
+---
+# General data for schematic representation
+schematic_view:
+  name: str()                                           # View name
+  derived_from: str()                                   # Reference view (if this view is derived)                    [ref:schematic_data.views]
+  default_item_graphics: str()                          # Default item representation. Empty to use item's default
+  items: map(include('schematic_item_view'), key=str()) # Per Item Data # TODO: what is key?                          [ref:schematic_data.items]
+  wires: map(include('schematic_wire_view'), key=str()) # Per Wire Data # TODO: what is key?                          [ref:schematic_data.wires]
+  clusters: map(include('schematic_view_cluster'), key=str())   # Nesting views
+---
+# Views clustering information
+schematic_view_cluster:
+  name: str()                                           # Cluster name. If empty then view's name would be used
+  condition: str()                                      # Expression to show/hide cluster (depends on schematic generics)
+  content: include('schematic_view')                    # Clusters content
+  placement: include('schematic_item_placement')        # Placement on schematic (top left)
+  anchor: include('anchor_options', required=False, none=False)     # Anchoring options. When anchor is moved/rotated/scaled - anchored item does same    [default:None]
+  collapsed: bool()                                     # True if cluster is collapsed to a box
+  graphics: map(include('custom_graphics'), key=str())  # Graphics for collapsed view
+  graphics_options: map(key=str())                      # Graphics options for collapsed view
+  highlight: str()                                      # Highlighting info     # TODO: define class for highlight
+---
+# Data for schematic item representation
+schematic_item_view:
+  item: str()                                           # To which item this symbol is related (few symbols on view may be related to single item)        [ref:schematic_data.items]
+  placement: include('schematic_item_placement')        # Placement on schematic (center)
+  anchor: include('anchor_options', required=False, none=False)     # Anchoring options. When anchor is moved/rotated/scaled - anchored item does same    [default:None]
+  view: str(required=False, none=False)                 # Item representation, None if default should be used                                             [default:None]
+  view_options: map(key=str())                          # Representation options
+  highlight: str()                                      # Highlighting info     # TODO: class for highlight
+---
+# Data for schematic item placement
+schematic_item_placement:
+  pos: include('xy_int')                                # Coords on schematic
+  rotation: num(required=False, none=False)             # Rotation angle        [default:0.0]     # TODO: CCW or CW?
+  scale: num(required=False, none=False)                # Scale                 [default:1.0]
+---
+# Data for schematic item anchoring
+anchor_options:
+  ref: str()        # Reference to placement anchor item or cluster
+  pos: bool()       # True if position should be anchored
+  h_anchor: str()   # Horizontal position anchor: left/center/right
+  v_anchor: str()   # Vertical position anchor: top/center/bottom
+  rotation: bool()  # True if rotation should be anchored
+  scale: bool()     # True if scale should be anchored
+---
+# Data for schematic wire representation
+schematic_wire_view:
+  route: list(list(int(),min=2,max=2))  # Wire route. If not specified then route is generated automatically, otherwise - defines route of wire by coords on schematic
+  color: str()                # Wire color
+  highlight_color: str()      # Highlight color
+  style: str()                # Line style - solid, dashed, etc.
+---
+# Coords in 2D spaces
+xy_num:
+  x: any(num(), int())  # X Coord
+  y: any(num(), int())  # Y Coord
+---
+# Coords in 2D spaces
+xy_int:
+  x: int()  # X Coord
+  y: int()  # Y Coord
+---
+# Wires cluster for items cluster interface (much like item's pin)
+schematic_wire_cluster:
+  display_text: str()                                   # Text to display on cluster
+  wires: list(str())                                    # Included wires                              [ref:schematic_data.wires]
+  collapsed: bool(required=False, none=False)           # True if wires are collapsed into single     [default:True]
+  side: enum('l', 'r', 'b', 't')                        # which side of item when placed automatically
+  _index_: int()                                        # order when placed automatically
+  pos: include('xy_num', required=False)                # Explicit position                           [default:None]
+  space: any(int(min=0), required=False, none=False)    # Extra space around this pin when placed automatically. Each 1 equals to 0.5 of pin step from each side                       [default:0]
+  hidden: bool(required=False, none=False)              #  Pin is visible only when connecting wires or explicitly specified to be visible                                              [default:False]
+  text_offset: any(int(), list(int(), min=2, max=2), required=False)   # Pin name text offset relative to pin position. Single integer to define offset depending on pin's side (-x for left, +x for right, -y for top, +y for bottom)                 [default:None]  # TODO: top/bottom?
+
+---
+# Hardware Platform Target for Schematic
+schematic_target:
+  name: str()
+  TODO: str() #  TODO: whole class should be defined

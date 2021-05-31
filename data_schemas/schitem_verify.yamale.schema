@@ -1,0 +1,1032 @@
+# Map with items definitions. Key is unique item name, defined like {origin}:{name}:{version}
+map(include('schitem_def'), key=str())
+---
+# Starts with alpha, ends with alpha or digit. In the middle - alphas, digits and underscores
+named:  # TODO: replace str() with include('named') where necessary
+  regex('^(?:[a-zA-Z]\w*?)?[a-zA-Z0-9]$')
+---
+# Word as defined in regex
+word:
+  regex('^\w+$')
+---
+# Alphas and numbers only
+alphanumeric:
+  regex('^[a-zA-Z0-9]+$')
+---
+# Binary string
+bstr:
+  any(regex('^(?:\d+\')?[xh]?[0-9a-hA-H_]+$'), regex('^(?:\d+\')?[d]?[0-9_]+$'), regex('^(?:\d+\')?[o]?[0-7_]+$'), regex('^(?:\d+\')?[b]?[0-1_]+$'))
+
+---
+# Generated strings
+str_generate:
+  generate: include('generate', required=False) # Generate multiple strings by template
+  value: str()
+
+---
+# Additional markup NOTEs:
+# 1. [default:<value>]  - value that is assigned when field is omitted and specified `none=False`
+# 2. [None:<value>]     - substitution for None if None value is not wanted. Applied to fields with 'null()' or available arbitrary fields without `none=False`
+
+# Definition of schematic item
+# It used by schematic and platforms as base definition for item
+# Schematic Item's can be implemented on platform only in case if platform 'knows' this item and their definitions are matching or compatible
+# Definition describes
+# - basic data (mainly for item identification)
+# - how item can be customized
+# - item's I/O and it's context
+# - info for graphic representations of item (there could be many)
+# - how user can interact with item
+schitem_def:
+  format_version: list(int(), min=3, max=3)   # Format definition (set of fields)
+  name: str()                                 # Item's name like 'and' 'fd' and so on
+  ref_name: str(required=False, none=False)   # Schematic reference name prefix. 'U' is used if omitted   [default:'U']
+  origin: str()                               # Origin of items (collection). Internal name or custom author's name
+  kind: str()                                 # Item's kind to gather items from different origins together. For example 'registered', 'logic', 'memory' etc.
+  version: list(int(), min=5, max=5)          # Version. Contains: [ <interface_major_ver>, <interface_minor_ver>, <impl_major_ver>, <impl_minor_ver>, <revision> ]
+    # InterfaceMajor     - defines major interface version for item with name <name>  (set of signals, defaults and protocol)
+    # InterfaceMinor     - defines minor interface version for item with name <name>  (set of signals, defaults and protocol)
+    # ArchitectureMajor - defines major implementation version for item with name <name>
+    # ArchitectureMinor - defines minor implementation version for item with name <name>
+    # Item can't be used for schematic item if any of it's major version differs from schematic's item
+    # Item can be used for schematic item if any it's minor versions greater or equal to schematic's item
+    # Revision is a number incremented linearly, starting from zero for each set of
+    #  [InterfaceMajor, InterfaceMinor, ArchitectureMajor, ArchitectureMinor] to indicate bugfixes
+  hash: int(required=False, none=False)       # Verification hash - hash for item with filled signature   [default:None]
+  spec: list(int(), min=3, max=3)             # Used Specification Version (schematics engine): [ <specification_major_ver>, <specification_minor_ver>, <spec_revision> ]
+  signature: list(int(), min=4, max=4)        # Cryptographic check signature: [ <key_index>, <signature>, <author_rights>, <verification_signature> ]
+    # KeyIndex - key index that were used for signatures
+    # Hash1 - signature hash for item description with valid zeroed hashes
+    # Hash2 - author's signature hash for item with valid Hash1 field
+    # Hash3 - seal signature hash - filled for verified items
+  version_history: map(str(), key=str())      # Versions chain and description for previous and current versions. By default: {"1.0.1.0.0":"Initial version"}
+  thumbnail: str()                            # Thumbnail image data for items palette
+  custdesc: list(str(), required=False)       # Customizable description of item, is set via GUI. Can completely define item from blank page or redefine something in existing item
+  view_only: bool(required=False)             # True if item used for display only (like image, text, shape, etc) [None:False]
+  # TODO: comments field to bind text with item/pin/wire
+
+  hints: include('schitem_hints')                           # Misc text used by GUI to give hints to user and also to give some hints to IDE algorithms
+  customizable: list(include('customizable_group'))         # Customization options (are related to generics below). Item's order is used for GUI dialog creation
+  generics: map(key=str())                                  # List of item's generics that define it's behavior and look
+  constants: list(map(str(), key=str()))                    # List of item's constants, derived from generics and other constants. Order defines value calculation order. Content is map of single item with constant name as key and expression as value
+  io: map(include('schitem_io_any'), key=str())             # Definition of item's I/O interfaces. Key is used for referencing
+  # TODO: set customized function to pin
+  context: map(include('schitem_context_any'), key=str())   # Definition of item's context (state-holding and state-depended variables)
+  creator_actions: map(include('schitem_creator_action'), key=str())  # List of interaction methods, that would be called from by interactive areas on graphics in creators mode
+  runner_actions: map(include('schitem_runner_action'), key=str())    # List of interaction methods, that would be called from by interactive areas on graphics in simulation mode
+  sounds_sets: map(include('sounds_set'), key=str(), required=False)  # View independed audible items to use from actions. Key of item within sounds set is used for referencing from functions
+  sounds_set: str(required=False)                                     # Default sounds set
+  functions: map(include('function'), key=str(), required=False)      # Functions that help to do misc things. Used with interactive areas for example (based on item's config)
+  views: map(include('schitem_graphics'), key=str())        # List of preinstalled item's graphics
+
+---
+# Hints for schematic item
+schitem_hints:
+  text_hint: list(str())                                  # Really short info about items to show in balloons, lists etc. to distinctly define item. For example "Logic AND gate"
+  text_short: list(str())                                 # Basic information about item - it's purpose, principles of action, interface description
+  text_long: list(str(), required=False)                  # Item background info (it's place among other items)
+  go_deep_ref: list(str(), required=False)                # Urls to get into depth of item
+  go_broad_ref: list(str(), required=False)               # Urls to get more info about usage of item
+
+  function_hint: str(required=False)                      # Hint about item's function for integrations (look for suitable implementation, part)    # TODO: think deeper
+  part_hint: list(str(), required=False)                  # Explicit hints about part's that can be used for implementation                         # TODO: think deeper
+  solution_hint: list(str(), required=False)              # Hint's about other solution's (schematics) that are rely on this very item
+
+---
+# Group of customizable values
+customizable_group:
+  name: str()         # Group name for referencing. Should be unique among all groups and values
+  short_text: str()   # Short text for GUI (display name for this group)
+  long_text: str()    # Detailed text for GUI
+  enabled: str(required=False) # If specified, then it contains expression that is verified against True/False. Expression contains names of other groups and values  [None:'true']
+  items: list(include('customizable_group'), include('customizable_value')) # Group content - customizable values and subgroups. Item's order is used for GUI dialog creation
+
+---
+# Customizable value descriptor
+customizable_value:
+  name: str()         # Value name for referencing. Should be unique among all groups and values
+  short_text: str()   # Short text for GUI (display name for this value)
+  long_text: str()    # Detailed text for GUI
+  enabled: str(required=False)  # If specified, then it contains expression that is verified against True/False. Expression contains names of other groups and values  [None:'true']
+  properties: include('customizable_value_any')
+  target: str(required=False)   # Generic target in format 'generics.<generic_name>' to apply this value to. If omitted then it's 'generics.<value_name>'
+
+---
+customizable_value_any:
+  any(include('customizable_value_numeric'),include('customizable_value_int'),include('customizable_value_bool'),include('customizable_value_bstring'),include('customizable_value_string'),include('customizable_value_list'),include('customizable_value_map'))
+
+---
+# Just a stub to pass templated values definition. Not used for verification
+customizable_value_arbitrary:
+  type: str()
+  values: any(required=False)
+  allow_none: any(str(), bool(), required=False)
+  default: any()
+
+---
+customizable_value_numeric:
+  type: enum('numeric')
+  values: include('num_range', required=False)
+  allow_none: bool(required=False)              # [None:False]
+  default: any(null(), num())                   # [None:0.0]
+
+---
+customizable_value_int:
+  type: enum('int')
+  values: include('int_range', required=False)
+  allow_none: bool(required=False)              # [None:False]
+  default: any(null(), int())                   # [None:0]
+
+---
+customizable_value_bool:
+  type: enum('bool')
+  values: null(required=False)
+  allow_none: bool(required=False)              # [None:False]
+  default: any(null(), bool())                  # [None:False]
+
+---
+customizable_value_string:
+  type: enum('string')
+  values: str(required=False)                   # Regex for validation
+  allow_none: bool(required=False)              # [None:False]
+  multiline: bool(required=False)               # [None:False] True if multiline values should be allowed
+  default: any(null(), str())                   # [None:'']
+
+---
+customizable_value_bstring:
+  type: enum('bstring')                         # NOTE: binary string. Allows only SpinalHDL-like binary strings
+  values: str(required=False)                   # Regex for validation
+  allow_none: bool(required=False)              # [None:False]
+  default: any(null(), include('bstr'))         # [None:"1'b0"]
+
+---
+customizable_value_list:
+  type: enum('list')
+  values: include('values_list')                # List of allowed values (values should be distinct)
+  allow_none: bool(required=False)              # [None:False]
+  default: any()                                # Value from list. If None and there is no None in list, then first from value is used as default
+
+---
+customizable_value_map:
+  type: enum('map')
+  values: include('values_map')                 # List of allowed named values
+  allow_none: bool(required=False)              # [None:False]
+  default: any()                                # Key for value in list. If None then first value is used as default (which is implementation depended)
+
+---
+num_range:
+  any(include('num_range_a'),include('num_range_b'),include('num_range_c'))
+
+---
+num_range_a:
+  from: any(num(), required=False)  # First value in range                                                                         [None:0.0]
+  to: any(num())                    # Last value in range
+  direction: enum('ascending', 'descending', required=False)  # Direction. By default defined by 'from' and 'to' values            [None:'ascending']
+  step: any(num(), required=False)  # Step between values If None - then it's 1.0 or -1.0 depending on range direction             [None:1.0]
+  # NOTE: wrong direction or step could lead to empty range
+
+---
+num_range_b:
+  from: any(num(), required=False)  # First value in range                                                                         [None:0.0]
+  until: any(num())                 # Last value in range, not including
+  direction: enum('ascending', 'descending', required=False)  # Direction. By default defined by 'from' and 'to' values            [None:'ascending']
+  step: any(num(), required=False)  # Step between values. If None - then it's 1 or -1 depending on range direction                [None:1.0]
+  # NOTE: wrong direction or step could lead to empty range
+
+---
+num_range_c:
+  from: any(num(), required=False)  # First value in range                                                                         [None:0.0]
+  count: any(num())                 # Last value in range, not including
+  direction: enum('ascending', 'descending', required=False)  # Direction. By default defined by 'from' and 'to' values            [None:'ascending']
+  step: any(num(), required=False)  # Step between values. If None - then it's 1 or -1 depending on range direction                [None:1.0]
+
+---
+int_range:
+  any(include('int_range_a'),include('int_range_b'),include('int_range_c'))
+
+---
+int_range_a:
+  from: any(int(), required=False)  # First value in range                                                                         [None:0]
+  to: any(int())                    # Last value in range
+  direction: enum('ascending', 'descending', required=False)  # Direction. By default defined by 'from' and 'to' values            [None:'ascending']
+  step: any(int(), required=False)  # Step between values If None - then it's 1 or -1 depending on range direction                 [None:1]
+  # NOTE: wrong direction or step could lead to empty range
+
+---
+int_range_b:
+  from: any(int(), required=False)  # First value in range                                                                         [None:0]
+  until: any(int())                 # Last value in range, not including
+  direction: enum('ascending', 'descending', required=False)  # Direction. By default defined by 'from' and 'to' values            [None:'ascending']
+  step: any(int(), required=False)  # Step between values. If None - then it's 1 or -1 depending on range direction                [None:1]
+  # NOTE: wrong direction or step could lead to empty range
+
+---
+int_range_c:
+  from: any(int(), required=False)  # First value in range                                                                         [None:0]
+  count: int()                      # Amount of items
+  direction: enum('ascending', 'descending', required=False)  # Direction. By default is ascending                                 [None:'ascending']
+  step: any(int(), required=False)  # Step between values. If None - then it's 1 or -1 depending on range direction                [None:1]
+
+---
+values_map:
+  map: list(list(min=2, max=2))     # Values map. First item is mnemonic name, second name is value. Mnemonic name should be distinct
+  # NOTE: list is used instead of map to provide defined order of values
+
+---
+values_list:
+  list: list()                      # Values list. All values that can be
+
+---
+schitem_io_any:
+  any(include('schitem_io_interface'),include('schitem_io_bundle'), include('schitem_io_vec'), include('schitem_io_scalar'))
+
+---
+# Defines IO interface of schematic item
+schitem_io_interface:
+  generate: include('generate', required=False)                    # Generate multiple IO interfaces by template
+  kind: enum('interface')
+  hint: list(str(), required=False) # Info about interface
+  role: enum('','ruler','worker')   # Role of schematic item for this interface. It would define direction for some signals of this interface. 'ruler' / 'worker' instead of 'master' and 'slave'. '' empty if role is not applicable to this interface
+  signals: map(any(include('schitem_io_bundle'), include('schitem_io_vec'), include('schitem_io_scalar')), key=str())   # Signals of interface. Bundle of signals or vector(list) of signals or single signal
+
+  properties: include('schitem_io_properties', required=False)      # Sets common IO properties like 'multisource', 'dont_invert'
+  relationship: include('schitem_io_relationship', required=False)  # Sets relationship of interface with signals outside this interface # NOTE: io_relationship is not required if there is no such function in the interface or if there is signal with corresponding function within interface itself
+  auto_type_clusters: list(str(), required=False )                  # List of clusters, used to gather signals with type 'auto'. All of them should be of same type # TODO: it's sneaky... need to think again
+  enabled: bool(required=False) # When False whole interface is not available for use [None:True]
+
+---
+# Sets common IO properties
+schitem_io_properties:
+  multi_source: bool(required=False)  # When True then multiple sources can be connected together [None:False]
+  toggle_invert: bool(required=False) # When False pin inversion can't be changed                 [None:False]
+  inverted: bool(required=False)      # When True pin is driven as inverted by default            [None:False]
+
+---
+# Defines I/O relationship with pins from other groups / w/o group
+schitem_io_relationship:
+  # None means inherited relationship
+  # String with '-' means no relationship
+  clock: str(required=False)        # Clock that drives this interface
+  reset: str(required=False)        # Signal that resets this interface
+  ce: str(required=False)           # Signal that is clock-enable for this interface
+  handshake: str(required=False)    # Signal that is handshake for this interface
+  flowcontrol: str(required=False)  # Signal that is flowcontrol for this interface
+  valid: str(required=False)        # Signal that shows that data valid for this interface
+  valid_flow: str(required=False)   # Signal that shows that data valid for flowcontrol based interface
+
+---
+# Multiple instances generation rules
+generate:
+  any(include('generate_iter'), include('generate_enum'))
+
+---
+# Integer iterator
+generate_iter:
+  range: include('int_range')
+  pattern: str(required=False)    # pattern to substitute. [None: '%i']
+  subst : str(required=False)     # pattern would be substituted with following pattern (${_i_} is iterator's value)            [None:'${_i_}']
+  inline_field: str(required=False)  # generated item would be a value of specified field
+
+---
+# Enumerated list
+generate_enum:
+  list: list(any(str(), int()), min=1) # list of values to use for generation. values would replace '%e'
+  pattern: str(required=False)    # pattern to substitute. [None: '%e']
+  subst: str(required=False)      # pattern would be substituted with following pattern (${_e_} is iterator's value)            [None:'${_e_}']
+  inline_field: str(required=False)  # generated item would be a value of specified field
+
+---
+# Bundle of signals
+schitem_io_bundle:
+  generate: include('generate', required=False)                                     # Generate multiple IO bundles by template
+  kind: enum('bundle')
+  hint: list(str(), required=False)                                                 # Info about bundle
+  signals: map(any(include('schitem_io_bundle'), include('schitem_io_vec'), include('schitem_io_scalar')), key=str())  # Key is used for referencing and as signal name
+  properties: include('schitem_io_properties', required=False)                      # Sets common IO properties
+  relationship: include('schitem_io_relationship', required=False)                  # Redefines relationship of signals
+  enabled: bool(required=False) # When False whole bundle is not available for use [None:True]
+
+---
+# List of signals (vector)
+schitem_io_vec:
+  generate: include('generate', required=False)                                     # Generate multiple IO vectors by template
+  kind: enum('vector')
+  hint: list(str(), required=False)                                                 # Info about vector
+  signals: any(include('schitem_io_vec_range'), include('schitem_io_vec_list'))
+  properties: include('schitem_io_properties', required=False)                      # Sets common IO properties
+  relationship: include('schitem_io_relationship', required=False)                  # Redefines relationship of signals
+  enabled: bool(required=False) # When False whole vector is not available for use [None:True]
+
+---
+schitem_io_vec_range:
+  items_type: include('io_scalar')  # Item's type in vector
+  range: include('int_range')
+
+---
+schitem_io_vec_list:
+  items: list(any(include('schitem_io_bundle'), include('schitem_io_vec'), include('schitem_io_scalar'))) # Items of vector
+
+---
+# Particular IO signal
+schitem_io_scalar:
+  generate: include('generate', required=False)                    # Generate multiple IO scalars by template
+  signal: include('scalar_type')
+  hint: list(str(), required=False)                               # Info about signal
+  direction: enum('in','out','io','ruler','worker')                         # Direction of signal. Ruler signals are outputs for interface with role 'ruler', worker signals are outputs for interface with role 'worker', otherwise it's input
+  function: enum('clock', 'latch', 'reset', 'ce', 'pipe', 'pipe_valid', 'pipe_handshake', 'pipe_ce', 'flow','flow_valid', 'flow_control', required=False) # Function of this signal. is used for helping/checking connections.      [default:None]
+  named: str(required=False)  # When io signal is named it means that function is defined by signal's name and it's strongly recommended to connect it to signal with same named signal of other item/interface     [default:None]
+  properties: include('schitem_io_properties', required=False)     # Sets common IO properties
+  relationship: include('schitem_io_relationship', required=False) # Redefines relationship of signal
+  enabled: bool(required=False) # When False pin is not available for use [None:True]
+
+---
+# Wire is used for connecting multiple wires together (like breadboard)
+schitem_io_wire:
+  TODO: str() # TODO:
+
+---
+# Connector is used for connector :) Acts like io_wire when two connectors are attached
+schitem_io_connector:
+  TODO: str() # TODO:
+
+---
+schitem_context_any:
+  any(include('schitem_context'), include('schitem_context_bundle'), include('schitem_context_list'), include('schitem_context_scalar'))
+
+---
+# Context structures that are hold item's internal values
+schitem_context:
+  generate: include('generate', required=False)  # Generate multiple contexts by template
+  kind: enum('context')
+  values: map(any(include('schitem_context_bundle'), include('schitem_context_vec'), include('schitem_context_scalar')), key=str())
+  auto_type_clusters: list(str(), required=False)  # Related signal and context values with type 'auto'. All context values should be same type as signal # TODO: it's sneaky... need to think again
+
+---
+# Multiple named values (aka map or dict)
+schitem_context_bundle:
+  generate: include('generate', required=False)  # Generate multiple context bundles by template
+  kind: enum('context_bundle')
+  values: map(include('schitem_context_bundle'), include('schitem_context_vec'), include('schitem_context_scalar'), key=str())  # Key is used for referencing and as signal name
+
+---
+# Values list
+schitem_context_vec:
+  generate: include('generate', required=False)  # Generate multiple context vectors by template
+  kind: enum('context_vec')
+  values: any(include('schitem_context_vec_range'), include('schitem_context_vec_list'))
+
+---
+schitem_context_vec_range:
+  items_type: include('io_scalar')          # Item's type in vector
+  range: include('int_range')
+
+---
+schitem_context_vec_list:
+  items: list(any(include('schitem_io_bundle'), include('schitem_io_vec'), include('schitem_io_scalar'))) # Items of vector
+
+---
+# Single value
+schitem_context_scalar:
+  generate: include('generate', required=False)  # Generate multiple context values by template
+  value: include('scalar_type')
+
+---
+scalar_type:
+  any(include('t_Bits'),include('t_UInt'),include('t_SInt'),include('t_Bool'),include('t_Enum'),include('t_UFix'),include('t_SFix'),include('t_int'),include('t_num'),include('t_string'),include('t_variant'),include('t_auto'))
+
+#########################
+# Arbitrary type (defined after extrapolation)
+#########################
+---
+# Just a stub to pass templated values definition. Not used for verification
+t_Arbitrary:
+  type: str()
+  properties: any(str(), map(key=str()), required=False)
+  default: any(required=False)
+
+#########################
+# Bits
+#########################
+---
+t_Bits:
+  type: enum('Bits')
+  properties: include('t_Bits_props', required=False)   # [None:{"width":1}]
+  default: include('bstr', required=False)              # [None:"1'b0"]
+
+---
+t_Bits_props:
+  width: int(min=1, required=False)                     # [None:1]
+
+---
+t_Bits_values:
+  enum('0','1',0,1)
+
+#########################
+# UInt
+#########################
+---
+t_UInt:
+  type: enum('UInt')
+  properties: include('t_UInt_props', required=False) # [None:{"width:32"}]
+  default: int(min=0, required=False)                 # [None:0]
+
+---
+t_UInt_props:
+  width: int(min=1, required=False)                   # [None:32]
+  wrap: bool(required=False)                          # Wrap on overflow/underflow if True otherwise - stop at boundary [None:True]
+
+#########################
+# SInt
+#########################
+---
+t_SInt:
+  type: enum('SInt')
+  properties: include('t_SInt_props', required=False) # [None:{"width:32"}]
+  default: int(required=False)                        # [None:0]
+
+---
+t_SInt_props:
+  width: int(min=2, required=False)                   # [None:32]
+  wrap: bool(required=False)                          # Wrap on overflow/underflow if True otherwise - stop at boundary [None:True]
+
+#########################
+# Bool
+#########################
+---
+t_Bool:
+  type: enum('Bool')
+  properties: include('t_Bool_props', required=False)
+  default: bool(required=False)                       # [None:False]
+
+---
+t_Bool_props:
+  width: enum(1, required=False)                      # [None:1]
+
+#########################
+# Enum
+#########################
+---
+t_Enum:
+  type: enum('Enum')
+  properties: any(include('t_Enum_props_A'), include('t_Enum_props_B'))
+  default: any(int(), str(), required=False)	# index for list or key for map # NOTE: if not specified then it would be first item from list or map
+
+---
+t_Enum_props_A:
+  list: list(include('named'))
+  encoding: enum('native', 'binarySequential', 'binaryOneHot', 'binaryGray', 'binaryJohnson', 'binaryHamming', required=False)  # [default:'binarySequential']
+
+---
+t_Enum_props_B:
+  map: map(include('named'), key=int(min=0))  # Key is encoded value
+
+#########################
+# UFix
+#########################
+---
+t_UFix:
+  type: enum('UFix')
+  properties: any(include('t_UFix_props_A'), include('t_UFix_props_B'), required=False)   # [None: {"peak":32, resolution:-16}]
+  default: any(include('t_UFix_default_A'), include('t_UFix_default_B'), required=False)  # [None: {"raw":0}]
+
+---
+t_UFix_props_A:
+  peak: int(min=1)
+  resolution: int()
+  wrap: bool(required=False)  # Wrap on overflow/underflow if True otherwise - stop at boundary [None:True]
+
+---
+t_UFix_props_B:
+  peak: int(min=1)
+  width: int(min=1)
+  wrap: bool(required=False)  # Wrap on overflow/underflow if True otherwise - stop at boundary [None:True]
+
+---
+t_UFix_default_A:
+  value: num(min=0.0)
+
+---
+t_UFix_default_B:
+  raw: int(min=0)
+
+#########################
+# SFix
+#########################
+---
+t_SFix:
+  type: enum('SFix')
+  properties: any(include('t_SFix_props_A'), include('t_SFix_props_B'), required=False)  # [None: {"peak":31, resolution:-16}]
+  default: any(include('t_SFix_default_A'), include('t_SFix_default_B'), required=False) # [None: {"raw":0}]
+
+---
+t_SFix_props_A:
+  peak: int(min=1)
+  resolution: int()
+  wrap: bool(required=False)  # Wrap on overflow/underflow if True otherwise - stop at boundary [None:True]
+
+---
+t_SFix_props_B:
+  peak: int(min=1)
+  width: int(min=2)
+  wrap: bool(required=False)  # Wrap on overflow/underflow if True otherwise - stop at boundary [None:True]
+
+---
+t_SFix_default_A:
+  value: num()
+
+---
+t_SFix_default_B:
+  raw: int()
+
+
+# TODO: Floating type
+# TODO: RecFloating
+
+#########################
+# int
+#########################
+---
+t_int:
+  type: enum('int')
+  properties: any(include('t_int_props_A'), include('t_int_props_B'), include('t_int_props_C'), required=False)  # [None: {"from":None, "to":None}]
+  default: int(required=False)         # [default:None]  # [None:0]
+
+---
+t_int_props_A:
+  from: any(int(), null())             # NOTE: None is for minus infinity
+  to: any(int(), null())               # NOTE: None is for plus infinity
+  wrap: bool(required=False)           # Wrap on overflow/underflow if True otherwise - stop at boundary [None:True]
+
+---
+t_int_props_B:
+  from: any(str(), int())             # NOTE: None is for minus infinity
+  until: any(str(), int())            # NOTE: None is for plus infinity
+  wrap: bool(required=False)          # Wrap on overflow/underflow if True otherwise - stop at boundary [None:True]
+
+---
+t_int_props_C:
+  from: int()
+  count: int(min=1)
+  wrap: bool(required=False)           # Wrap on overflow/underflow if True otherwise - stop at boundary [None:True]
+
+#########################
+# numeric
+#########################
+---
+t_num:
+  type: enum('numeric')
+  properties: any(include('t_num_props_A'), include('t_num_props_B'), include('t_num_props_C'), required=False)  # [None: {"from":None, "to":None}]
+  default: num(required=False)         # [None: 0.0]
+
+---
+t_num_props_A:
+  from: any(num(), null())
+  to: any(num(), null())
+  wrap: bool(required=False)           # Wrap on overflow/underflow if True otherwise - stop at boundary [None:True]
+
+---
+t_num_props_B:
+  from: any(num(), null())
+  until: any(num(), null())
+  wrap: bool(required=False)           # Wrap on overflow/underflow if True otherwise - stop at boundary [None:True]
+
+---
+t_num_props_C:
+  from: num()
+  count: int(min=1)
+  step: num(required=False)            # [None: 1.0]
+  wrap: bool(required=False)           # Wrap on overflow/underflow if True otherwise - stop at boundary [None:True]
+
+#########################
+# string
+#########################
+---
+t_string:
+  type: enum('string')
+  properties: include('t_string_props', required=False)   # [None: {"length"=None}]
+  default: str(required=False)                            # [None: '']   # NOTE: if length is specified then rest is filled with spaces
+
+---
+t_string_props:
+  length: int(min=1, required=False)
+
+#########################
+# variant
+#########################
+---
+t_variant:
+  type: enum('variant')
+  properties: include('t_variant_props', required=False)
+  default: any(required=False)
+
+---
+t_variant_props:
+  no_properties: enum('', required=False)
+
+#########################
+# auto
+#########################
+---
+t_auto:
+  type: enum('auto')
+  properties: include('t_auto_props')
+  default: any(required=False)
+
+---
+t_auto_props:
+  auto_type_cluster: str()
+
+---
+# Item's interactive actions like push, push-off, toggle, set, reset, inc, dec etc. in creator mode
+schitem_creator_action:
+  args: map(include('schitem_action_arg'), key=str(), required=False)   # Action arguments list
+  enabled: bool(required=False)                                         # Whether action is active                            [None:True]
+  function: any(str(), include('function'))                             # Worker function for action. Function itself or reference to functions of schitem
+  function_args_map: any(str(), map(key=str()), required=False)         # Mapping action's data and other values to function  [None:{}]
+  on_action: any(str(), include('function'), required=False)            # Extra function to call on action for interaction (like update smth, blink, etc.)
+  on_action_args_map: any(str(), map(key=str()), required=False)        # Mapping action's data and other values to function  [None:{}]
+  on_action_sound: include('sound_instance', required=False)            # Plays sound when action is fired
+
+---
+# Item's interactive actions like push, push-off, toggle, set, reset, inc, dec etc. in simulation mode
+schitem_runner_action:
+  args: map(include('schitem_action_arg'), key=str(), required=False)   # Action arguments list
+  enabled: bool(required=False)                                         # Whether action is active                            [None:True]
+  condition: include('function', required=False)                        # Can be changed during simulation according to i/o or context values
+  on_action: any(str(), include('function'), required=False)            # Extra function to call on action for interaction (like update smth, blink, etc.)
+  on_action_args_map: any(str(), map(key=str()), required=False)        # Mapping action's data and other values to function  [None:{}]
+  on_action_sound: include('sound_instance', required=False)            # Plays sound when action is fired
+
+---
+# Argument description for interactive action
+schitem_action_arg:
+  any(include('int_arg'), include('num_arg'), include('string_arg'), include('values_map_arg'), include('list_arg'), include('map_arg'))
+
+# NOTE: about required arguments. If value wasn't mapped or set then user would be asked for value via GUI. Default value is used as start point in this case
+
+---
+int_arg:
+  type: enum('int')
+  hint: list(str(), required=False)
+  values: include('int_range', required=False)
+  default: int(required=False)                  # [None:0]
+  required: bool(required=False)                # [None:True]
+
+---
+num_arg:
+  type: enum('num')
+  hint: list(str(), required=False)
+  values: include('num_range', required=False)
+  default: num(required=False)                  # [None:0.0]
+  required: bool(required=False)                # [None:True]
+
+---
+string_arg:
+  type: enum('string')
+  hint: list(str(), required=False)
+  values: list(str(),required=False)
+  default: str(required=False)                  # [None:'']
+  required: bool(required=False)                # [None:True]
+
+---
+values_map_arg:
+  type: enum('values_map')
+  hint: list(str(), required=False)
+  values: map(any(), key=str())                 # values with key  # TODO: replace with list of tuples? as default can be implementation depended
+  default: str(required=False)                  # key of value. If not specified then first value is used.
+  required: bool(required=False)                # [None:True]
+
+---
+list_arg:
+  type: enum('list')
+  hint: list(str(), required=False)
+  values: list(include('schitem_action_arg'))   # TODO: list_arg is just a sketch now. think about actual usage
+  default: list(required=False)                 # [None:()]
+  required: bool(required=False)                # [None:True]
+
+---
+map_arg:
+  type: enum('map')
+  hint: list(str(), required=False)
+  values: map(include('schitem_action_arg'))    # TODO: map_arg is just a sketch now. think about actual usage
+  default: map(required=False)                  # [None:{}]
+  required: bool(required=False)                # [None:True]
+
+---
+# Items graphics definition
+# Contains list of graphic items (shapes, texts, images etc.) and interactive areas, and I/O display info and placement
+# Also contains functions for
+schitem_graphics:
+  generate: include('generate', required=False)       # Generate multiple states views by template
+  based_on: str(required=False)                       # Reference to view [ref:schitem_graphics]
+  template: bool(required=False, none=False)          # If true then can be used as reference only (useful to define common functions for different views)  [default:False]
+  default: bool(required=False)                       # True if this view should be default [None:False]
+  customizable: list(include('customizable_group'))   # Graphics customization options (are related to generics below). Item's order is used for GUI dialog creation
+  generics: map(key=str())                            # List of graphics generics that define it's behavior and look
+  constants: list(map(str(), key=str()))              # List of graphics constants, derived from generics and other constants. Order defines value calculation order. Content is map of single item with constant name as key and expression as value
+  width: any(int(), null())                           # Graphics items size (used for relational positioning and bboxes)
+  height: any(int(), null())                          # Graphics items size (used for relational positioning and bboxes)
+  pin_step: int(required=False)                       # [None:20]
+  pin_tap: int(required=False)                        # [None:20]
+  resizable: bool(required=False)                     # Whether or not this view can be resized via GUI. If true then width and height should be within customizables [None:False]
+  pivots: map(list(int(), min=2, max=2), key=str(), required=False)   # Allows to anchor other items to point on that item
+  items: map(include('graphics_item'), key=str())     # Graphic items. Key is used for referencing from functions
+  io: list(include('graphics_pin_group'))             # I/O display. Group's name is used for referencing from functions
+  areas: map(include('interactive_area'), key=str(), required=False)  # Interactive areas. Key is used for referencing from functions
+  sounds: map(include('sound_instance'), key=str(), required=False)   # Audible items. Key is used for referencing from functions
+  functions: map(include('function'), key=str(), required=False)      # Functions that make graphic interactive (based on item's context, inputs and outputs)
+  states: map(include('schitem_graphics_state'), key=str(), required=False)  # States definitions. With each state associated on_entry, on_leave, on_active functions and sounds
+  images_sets: map(include('glyphs_set'), key=str(), required=False)  # Images database
+  images_set: str(required=False)                                     # Default images set
+  sounds_sets: map(include('sounds_set'), key=str(), required=False)  # Sounds database
+  sounds_set: str(required=False)                                     # Default sounds set
+  custom_images: map(include('image'), key=str(), required=False)     # NOTE: custom images are set only via GUI # key is used for image lookup. If custom image replaces original image/glyph with same path within images_set as key  [default:None]
+  custom_sounds: map(include('sound'), key=str(), required=False)     # NOTE: custom sounds are set only via GUI # key is used for sound lookup. If custom sound replaces original sound/sprite with same path within sounds_set as key [default:None]
+  custom_items: map(include('graphics_item'), key=str(), required=False)      # NOTE: custom items are set only via GUI
+  custom_areas: map(include('interactive_area'), key=str(), required=False)   # NOTE: custom areas are set only via GUI
+
+---
+# Basic graphics item
+graphics_item:
+  generate: include('generate', required=False)                    # Generate multiple graphic items by template
+  layer: str()    # Layer to draw on
+  order: int()    # Order. Graphic items with higher order are displayed on top of another
+  visible: bool(required=False)       # [None:True]
+  x: any(num(), int())   # X Coord. Integer coords are absolute, float - are relative item bbox, where 0.5 is center of item, 0.0 is left, 1.0 is right, negative is beyond left, >1.0 is beyond right
+  y: any(num(), int())   # Y Coord. Integer coords are absolute, float - are relative item bbox, where 0.5 is center of item, 0.0 is ?top?, 1.0 is ?bottom?, negative is above ?top?, >1.0 is below ?bottom? # TODO: top/bottom?
+  rotation: num(required=False)       # Rotation              # TODO: CCW or CW?
+  scale_x: num(required=False)        # X axis scale
+  scale_y: num(required=False)        # Y axis scale
+  pivot_x: any(num(), int(), required=False) # Pivot point X coord for scaling and rotation
+  pivot_y: any(num(), int(), required=False) # Pivot point Y coord for scaling and rotation
+  opacity: num(min=0.0, max=1.0, required=False)      # Control image's opacity [None:1.0]  # https://stackoverflow.com/questions/2359537/how-to-change-the-opacity-alpha-transparency-of-an-element-in-a-canvas-elemen
+  composite_operation: enum('source-over', 'source-atop', 'destination-over', 'destination-out', 'lighter', 'multiply', 'screen', 'overlay', 'darken', 'lighten', 'color-dodge', 'color-burn', 'hard-light', 'soft-light', 'difference', 'exclusion', 'hue', 'saturation', 'color', 'luminosity', required=False)  # https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation
+  item_data: any(include('graphics_image'), include('graphics_shape'), include('graphics_text'))
+  # NOTE: 'copy', 'source-in', 'source-out', 'destination-in', 'destination-atop', 'xor' were disabled as they wiping off content drawn before
+  shadow_offset_x: int(required=False)
+  shadow_offset_y: int(required=False)
+  shadow_blur: int(required=False)
+  shadow_color: str(required=False)
+  pivots: map(list(int(), min=2, max=2), key=str(), required=False)   # Allows to anchor other items to point on that item
+
+---
+# Images set:
+glyphs_set:
+  generate: include('generate', required=False)                    # Generate multiple images sets by template
+  items: map(include('glyph'), key=str())
+
+---
+# Glyph info (for displaying image or part of image)
+glyph:
+  generate: include('generate', required=False)                    # Generate multiple glyphs sets by template
+  items: list(include('glyph_data'))
+
+---
+# Glyph info (for displaying image or part of image)
+glyph_data:
+  src: str()
+  partial: list(include('glyph_partial', required=False))  # List for partial image display. If multiple items specified then glyph animation would be available
+
+---
+# Glyph partial info (for displaying part of image)
+glyph_partial:
+  x: int(min=0)         # 0 is left side of image
+  y: int(min=0)         # 0 is image's ?top?  # TODO: top/bottom?
+  width: int(min=1)
+  height: int(min=1)
+
+---
+# Glyph animation
+glyph_animation:
+  index: int(required=False)  # Starting glyph [None:0]
+  count: int(required=False)  # Total glyphs in animation. If None then all glyphs are used
+  animation_speed: num(required=False) # Glyph animation speed.         [None:0] 2.0 = 2 glyphs change per 1 second
+  animation_offset: num(required=False) # Glyph animation start offset. [None:0] Only fractional part is used and interpreted as animation cycle position within range [0..1)
+
+---
+# Image item data
+graphics_image:
+  kind: enum('image')
+  glyph: str()                             # Reference to glyph
+  animation: include('glyph_animation', required=False) # Glyph animation
+  width: any(num(), int(min=1))            # Image area width. Float numbers are relative to parent's shape
+  height: any(num(), int(min=1))           # Image area height. Float numbers are relative to parent's shape
+  h_align: num(required=False)             # [None:0.5]
+  v_align: num(required=False)             # [None:0.5]
+  hsv_mod: list(any(num(), int()), min=3, max=3, required=False)   # Hue / Sat / Value modifications. Integer for absolute values, float for relative values # https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Pixel_manipulation_with_canvas
+  tile_h: bool(required=False)             # Tile or scale image       [None:False]
+  tile_v: bool(required=False)             # Tile or scale image       [None:False]
+  tile_h_scale: num(required=False)        # Image scale when tiling   [None:1.0]   Positive values are for absolute scaling, negative - for scaling relative to item scale
+  tile_v_scale: num(required=False)        # Image scale when tiling   [None:1.0]   Positive values are for absolute scaling, negative - for scaling relative to item scale
+
+# TODO: video on canvas - https://www.w3schools.com/tags/canvas_drawimage.asp
+
+---
+# Shape item data
+graphics_shape:
+  kind: enum('shape')
+  shape: any(include('shape_box'), include('shape_arc'), include('shape_path'))  # Shape data
+  fill: bool(required=False)                                                  # [None:False]
+  fill_color: str(required=False)                                             # [None:"theme:ItemFill"]
+  fill_color_hsv_mod: list(any(num(), int()), min=3, max=3, required=False)   # Hue / Sat / Value modifications. Integer for absolute values, float for relative values
+  stroke: bool(required=False)                                                # [None:True]
+  stroke_color: str(required=False)                                           # [None:"theme:ItemContour"]
+  stroke_color_hsv_mod: list(any(num(), int()), min=3, max=3, required=False) # Hue / Sat / Value modifications. Integer for absolute values, float for relative values
+  stroke_width: int(min=1, required=False)                                    # [None:1]
+  opacity: num(min=0.0, max=1.0, required=False)                              # Control shape opacity [None:1.0]
+  # implementation depended
+  anvil.works: include('graphics_item_anvil_works', required=False)
+
+---
+graphics_item_anvil_works:
+  stroke_cap: enum('square','butt','round', required=False)                   # [None:'square']
+  stroke_join: enum('miter','round','bevel', required=False)                  # [None:'miter']
+  mitter_limit: int(min=0, required=False)                                    # [None:5]
+
+---
+# Text item data
+graphics_text:
+  kind: enum('text')
+  text: str()
+  font: str(required=False)                                                   # [None:"16px sans-serif"]
+  h_align: num(required=False)                                                # [None:0.5]
+  v_align: num(required=False)                                                # [None:0.5]
+  fill: bool(required=False)                                                  # [None:True]
+  fill_color: str(required=False)                                             # [None:"theme:TextColor"]
+  fill_color_hsv_mod: list(any(num(), int()), min=3, max=3, required=False)   # Hue / Sat / Value modifications. Integer for absolute values, float for relative values
+  stroke: bool(required=False)                                                # [None:False]
+  stroke_color: str(required=False)                                           # [None:"theme:TextColor"]
+  stroke_color_hsv_mod: list(any(num(), int()), min=3, max=3, required=False) # Hue / Sat / Value modifications. Integer for absolute values, float for relative values
+  stroke_width: int(min=1, required=False)                                    # [None:1]
+  opacity: num(min=0.0, max=1.0, required=False)                              # Control text opacity [None:1.0]
+
+---
+# Pins group defintion
+graphics_pin_group:
+  generate: include('generate', required=False)       # Generate multiple graphic pin groups by template
+  group: str()                                        # Group's name
+  _index_: int(required=False)                        # Order for automatic placement       # TODO: negative indices to start finding place for group from other end (bottom, right)
+  hint: list(str(), required=False)                   # Info about pins groups when
+  reserve_opposite_side: bool(required=False)         # If true then if pins take only one side (for example left) then same space on opposite side would be also occupied  [None:False]
+  space_before: int(min=0, required=False)            # Extra space before this group when placed automatically. Each 1 equals to 0.5 of pin step                 [None:0]
+  space_after: int(min=0, required=False)             # Extra space after this group when placed automatically. Each 1 equals to 0.5 of pin step                  [None:0]
+  # TODO: how about nested groups()
+  groups: list(include('graphics_pin_group'), required=False)       # Nested groups. Group's name in conjunction with parent's name is used for referencing from functions  # TODO: hierarchy separator? '/'?
+  pins: list(include('graphics_pin'))                               # Pins for this group
+
+  # Set defaults for group's pins
+  side: str(required=False)                           # Sets side for pins
+  hidden: bool(required=False)                        # Pin is visible only when connecting wires or explicitly specified to be visible                           [None:False]
+  unhide_when_wired: bool(required=False)             # When pin is wired it should be displayed                                                                  [None:True]
+  pin_tap: int(min=0, required=False)                 # Custom Pin tap length
+  text_offset: any(int(), list(int(), min=2, max=2), required=False)   # Pin name text offset relative to pin position. Single integer to define offset depending on pin's side (-x for left, +x for right, -y for top, +y for bottom)   # TODO: top/bottom?
+  kind_based_graphics: int(min=-1, required=False)    # Function pin related graphics (CLK, RST etc.). Select which kind to use. -1 if function related graphics should not be displayed at all. 0 - use default for scope. 1 and greater to explicitly define how it looks [None:0]
+
+---
+# Pin definition
+graphics_pin:
+  generate: include('generate', required=False)       # Generate multiple graphic pins by template
+  pin: str()                                          # Related functional pin of item pin. '_cluster_' if it's pins cluster.
+  _index_: int(required=False)                        # Order for automatic placement       # TODO: negative indices to start finding place for group from other end (bottom, right)
+  hint: list(str(), required=False)                   # View-depended info about pin when
+  display_text: str(required=False)                   # Text ot be displayed as pin name if custom text is required
+  graphics: include('schitem_graphics', required=False) # Extra graphics for this pin and **ALSO** definitions for clustered pins look
+  collapsed: bool(required=False)                     # True if clustered pins are collapsed
+  side: enum('l', 'r', 'b', 't', required=False)      # Side of pin. Used for automatic placement, and also use for direction of wire connection, pin taps direction, relative text placement. By default inputs on left side, outputs are on right side
+  pos: list(any(int(), num()), min=2, max=2, required=False)      # Explicit position
+  space_before: int(min=0, required=False)            # Extra space before this pin when placed automatically. Each 1 equals to 0.5 of pin step          [None:0]
+  space_after: int(min=0, required=False)             # Extra space after this pin when placed automatically. Each 1 equals to 0.5 of pin step           [None:0]
+  hidden: bool(required=False)                        # Pin is visible only when connecting wires or explicitly specified to be visible                  [None:False]
+  unhide_when_wired: bool(required=False)             # When pin is wired it should be displayed                                                         [None:True]
+  pin_tap: int(min=0, required=False)                 # Custom Pin tap length
+  text_offset: any(int(), list(int(), min=2, max=2), required=False)   # Pin name text offset relative to pin position. Single integer to define offset depending on pin's side (-x for left, +x for right, -y for top, +y for bottom)    # TODO: top/bottom?
+  kind_based_graphics: int(min=-1, required=False)    # Function pin related graphics (CLK, RST etc.). Select which kind to use. -1 if function related graphics should not be displayed at all. 0 - use default for scope. 1 and greater to explicitly define how it looks [None:0]
+
+  # TODO: define placement origin for clustered pins    By default automatically placed clustered pins are on same side as their parent and below it. Most complicated thing is with custom placed pins
+  # bind events to pins interaction? like force value, toggle context?
+
+---
+interactive_area:
+  generate: include('generate', required=False)       # Generate multiple interactive areas by template
+  order: int()
+  enabled: bool(required=False)
+  shape: any(include('shape_box'), include('shape_arc'), include('shape_path'))  # area's shape
+  creator_gestures: any(null(), map(any(include('gesture_touch_action'), include('gesture_slide_action')), key=str())) # TODO: more actions like roll, pinch etc.
+  runner_gestures: any(null(), map(any(include('gesture_touch_action'), include('gesture_slide_action')), key=str()))  # TODO: more actions like roll, pinch etc.
+
+---
+gesture_touch_action:
+  kind: enum('touch', 'touch_long', 'touch_down', 'touch_up')
+  enabled: bool(required=False)     # [None:True]
+  action: str() # [ref:schitem_creator_action] [ref:schitem_runner_action]
+  args_map: include('gesture_touch_args_map', required=False)
+
+---
+gesture_touch_args_map:
+  gesture: str(required=False)
+  x_abs: str(required=False)
+  y_abs: str(required=False)
+  x_rel: str(required=False)
+  y_rel: str(required=False)
+
+---
+gesture_slide_action:
+  kind: enum('touch_slide_start', 'touch_slide', 'touch_slide_stop')
+  enabled: bool(required=False)            # [None:True]
+  action: str() # [ref:schitem_creator_action] [ref:schitem_runner_action]
+  args_map: include('gesture_slide_args_map', required=False)
+  stop_when_outside: bool(required=False)  # True to break slide gesture if point goes off area
+  hold_when_outside: bool(required=False)  # True to hold slide gesture (don't break but don't invoke) if point goes off area
+
+---
+gesture_slide_args_map:
+  gesture: str(required=False)
+  start_x_abs: str(required=False)
+  start_y_abs: str(required=False)
+  start_x_rel: str(required=False)
+  start_y_rel: str(required=False)
+  x_abs: str(required=False)
+  y_abs: str(required=False)
+  x_rel: str(required=False)
+  y_rel: str(required=False)
+
+---
+# Box shape defined by pivot, width and height.
+shape_box:
+  kind: enum('box')
+  x: any(num(), int())                      # Box pivot X
+  y: any(num(), int())                      # Box pivot Y
+  width: any(num(), int())                  # Box width
+  height: any(num(), int())                 # Box height
+  h_align: num(required=False)              # Horizontal alignment to pivot point [None:0.5]
+  v_align: num(required=False)              # Vertical alignment to pivot point   [None:0.5]
+
+---
+# Circle shape defined by list of x,y coords.
+shape_arc:
+  kind: enum('arc')
+  x: any(num(), int())                                   # Arc pivot X
+  y: any(num(), int())                                   # Arc pivot Y
+  radius: any(num(), int())                              # Arc radius
+  angle1: any(num(), int(), required=False)              # Arc start point. int is for degrees, float if for circle part (0.25 = 90 degrees for example) [None:0.0]
+  angle2: any(num(), int(), required=False)              # Arc end point.   int is for degrees, float if for circle part (0.25 = 90 degrees for example) [None:1.0]
+  h_align: num(required=False)              # Horizontal alignment of full arc to pivot point [None:0.5]
+  v_align: num(required=False)              # Vertical alignment of full arc to pivot point   [None:0.5]
+
+---
+# Shape defined by list of x,y coords.
+shape_path:
+  kind: enum('path')
+  path: list(list(any(num(), int()), min=2, max=2), min=2)   # Path points. Integer are absolute coords, float - are relative to parent's shape
+  closed: bool(required=False)                               # [None:False]
+
+---
+# Generic function declaration
+# Functions are use for interactive graphic and user's interactions with item
+function:
+  generate: include('generate', required=False) # Generate multiple functions sets by template
+  args: map(any(str(), include('str_generate')), key=str(), required=False) # Arguments to function. References to schitem's generics, constants and other kind of things like i/o, context. Also constants would do the thing
+  sense: list(any(str(), include('str_generate')), required=False)          # Changes on which arguments would trigger function
+  language: enum('js')                        # Code's language
+  code: list(str())                           # Function code
+  targets: any(str(), list(str()), map(str(), key=str()))  # To which item apply result. path if return value is scalar, list of paths if return is list, map of paths if return is map. Every path is references to schitem's generics, context, i/o, actions
+
+---
+# Graphic state that is defined by expression (depends on item's context and I/O)
+# Used for default states set to customize particular item's view from GUI
+schitem_graphics_state:
+  generate: include('generate', required=False) # Generate multiple states sets by template
+  condition: include('function')        # When this state is active
+  description: list(str())              # Description for GUI
+  on_entry: any(str(), list(str()))     # Function(s) to run on state entry
+  on_leave: any(str(), list(str()))     # Function(s) to run on state leave
+  on_entry_sound: include('sound_instance', required=False)   # Plays sound on state entry
+  on_leave_sound: include('sound_instance', required=False)   # Plays sound on state leave
+  on_active_sound: include('sound_instance', required=False)  # Plays sound when state is active
+  items: map(include('graphics_item'), key=str())             # State related graphic items. Key is used for referencing from functions.     Visible only when state is active
+  areas: map(include('interactive_area'), key=str())          # State related interactive areas. Key is used for referencing from functions. Active only when state is active
+  custom_items: map(include('graphics_item'), key=str())      # NOTE: custom items are set only via GUI and visible only when state is active
+  custom_areas: map(include('interactive_area'), key=str())   # NOTE: custom areas are set only via GUI and active only when state is active
+
+---
+# Sound description
+sound_sprite:
+  generate: include('generate', required=False) # Generate multiple sound sprites sets by template
+  src: str()                                    # Sound source. May contain multiple alternate sound sources in order of preference. First one that is compatible is selected
+  start: int(required=False)                    # Sprite start offset
+  end: int(required=False)                      # Sprite end offset
+
+---
+# Sounds set:
+sounds_set:
+  generate: include('generate', required=False)             # Generate multiple sounds sets by template
+  items: map(include('sound_sprite'), key=str())
+
+---
+# Audible instances
+sound_instance:
+  generate: include('generate', required=False) # Generate multiple sound instances by template
+  sprite: str()                                 # Reference to sound sprite      [ref:sound.sprites]
+  loop: bool(required=False)                    # True if sound should be looped [None:False]
+  volume: num(min=0.0, max=1.0, required=False) # Volume           [None:1.0]
+  enabled: bool(required=False)                 # Disables sound at all          [None:True]
