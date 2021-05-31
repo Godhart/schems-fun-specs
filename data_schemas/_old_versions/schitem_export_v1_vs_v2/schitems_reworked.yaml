@@ -1,0 +1,769 @@
+items:
+  U1:
+    data:
+      context:
+        _Q:
+          default: 0
+          properties: {}
+          type: Bit
+      creator_actions:
+        set_default_value:
+          function: set_default_value
+        toggle_default_value:
+          enabled: true
+          function: toggle_default_value
+      functions:
+        set_default_value:
+          args: {}
+          code: ''
+          language: js
+          targets: []
+        toggle_default_value:
+          args: {}
+          code: ''
+          language: js
+          targets: []
+      generics:
+        CE_pin: true
+        QINV_pin: true
+        init_value: 0
+        peak: 0
+        reset: true
+        reset_async: false
+        reset_priority: true
+        set: false
+        set_async: false
+        type: Bit
+        views_schematic_left_side_set_reset: false
+        width: 1
+      graphics:
+        _autobox_bottom_: 60
+        _autobox_left_: -60
+        _autobox_right_: 60
+        _autobox_top_: -40
+        _bbox_bottom_: 80
+        _bbox_left_: -80
+        _bbox_right_: 80
+        _bbox_top_: -40
+        _ibox_bottom_: 60
+        _ibox_left_: -60
+        _ibox_right_: 60
+        _ibox_top_: -40
+        areas:
+          state_toggler:
+            creator_gestures:
+              set_default_value:
+                action: set_default_value
+                kind: touch_long
+              toggle_default_value:
+                action: toggle_default_value
+                kind: touch_long
+            order: 0
+            runner_gestures:
+              set_value:
+                action: set_value
+                kind: touch_long
+              toggle_value:
+                action: toggle_value
+                kind: touch_long
+            shape:
+              height: 0
+              kind: box
+              width: 120
+              x: 0.5
+              y: 0.5
+        constants:
+        - set_side: false?'l':'t'
+        - reset_side: false?'l':'b'
+        customizable:
+        - enabled: true
+          items:
+          - enabled: true
+            long_text: Allocate set/reset pins on left side
+            name: left_side_set_reset
+            properties:
+              default: false
+              type: bool
+            short_text: Left-side set/reset
+          long_text: ''
+          name: pins_locations
+          short_text: Pins locations
+        default: true
+        functions:
+          box_color:
+            args:
+              default_color: config/views/schematic/items/box/fill_color
+              value: instance/io/Q/value
+            code: if (value == 1){ result = ""#A0DD70"" }else if (value == 0){ result
+              = ""#FF9090"" }else{ result = default_color }
+            language: js
+            sense:
+            - value
+            targets: instance/views/schematic/items/box/fill_color
+        generics:
+          left_side_set_reset: false
+        height: 100
+        io:
+        - group: DQ
+          hint:
+          - Flip-flop's data input and output
+          pins:
+          - pin: D
+          - pin: Q
+          - pin: Q#
+        - group: REG_CONTROL
+          hint:
+          - Flip-flop's control
+          pins:
+          - pin: CE
+          - pin: SET
+            side: t
+          - pin: PRESET
+            side: t
+          - pin: RST
+            side: b
+          - pin: CLR
+            side: b
+          - pin: C
+        items:
+          box:
+            item_data:
+              closed: true
+              fill: true
+              fill_color: '#FFFFFF'
+              kind: shape
+              path:
+              - - -60
+                - 60
+              - - -60
+                - -40
+              - - 60
+                - -40
+              - - 60
+                - 60
+              stroke: true
+              stroke_color: '#000000'
+              stroke_width: 4
+            layer: canvas
+            order: 0
+            shadow_blur: 5
+            shadow_color: '#CFCFCF'
+            shadow_offset_x: 5
+            shadow_offset_y: 5
+            x: 0.5
+            y: 0.5
+          partnumber:
+            item_data:
+              fill: true
+              fill_color: '#700000'
+              font: bold 16px sans-serif
+              h_align: 0.5
+              kind: text
+              text: FDRE
+              v_align: 0.5
+            layer: canvas
+            order: 1
+            rotation: -90
+            x: 0.5
+            y: 0.5
+          refdes:
+            item_data:
+              fill: true
+              fill_color: '#000070'
+              font: bold 16px sans-serif
+              h_align: 0.5
+              kind: text
+              text: U1
+              v_align: 0.5
+            layer: canvas
+            order: 2
+            x: 0.5
+            y: 20
+        width: 120
+      io:
+        C:
+          direction: in
+          function: clock
+          properties:
+            toggle_invert: true
+          signal:
+            default: 0
+            type: Bit
+        CE:
+          direction: in
+          enabled: true
+          function: ce
+          properties:
+            toggle_invert: true
+          relationship:
+            clock: C
+          signal:
+            default: 1
+            type: Bit
+        CLR:
+          direction: in
+          enabled: false
+          function: reset
+          properties:
+            toggle_invert: true
+          signal:
+            default: 0
+            type: Bit
+        D:
+          direction: in
+          relationship:
+            ce: CE
+            clock: C
+            reset: RST
+          signal:
+            default: 0
+            properties: {}
+            type: Bit
+        PRESET:
+          direction: in
+          enabled: false
+          function: reset
+          properties:
+            toggle_invert: true
+          signal:
+            default: 0
+            type: Bit
+        Q:
+          direction: out
+          relationship:
+            ce: CE
+            clock: C
+            reset: RST
+          signal:
+            default: 0
+            properties: {}
+            type: Bit
+        Q#:
+          direction: out
+          properties:
+            inverted: true
+          relationship:
+            ce: CE
+            clock: C
+            reset: RST
+          signal:
+            default: 0
+            properties: {}
+            type: Bit
+        RST:
+          direction: in
+          enabled: true
+          function: reset
+          properties:
+            toggle_invert: true
+          relationship:
+            clock: CLK
+          signal:
+            default: 0
+            type: Bit
+        SET:
+          direction: in
+          enabled: false
+          function: reset
+          properties:
+            toggle_invert: true
+          relationship:
+            clock: C
+          signal:
+            default: 0
+            type: Bit
+      io_list:
+        DQ:
+          D:
+            _index_: 0
+            default: 0
+            inverted: false
+            io: i
+            multi_source: false
+            pin_pos:
+            - -80
+            - -20
+            pin_tap: 20
+            side: l
+            toggle_invert: false
+            type: Bit
+            type_properties: {}
+          Q:
+            _index_: 0
+            default: 0
+            inverted: false
+            io: o
+            multi_source: false
+            pin_pos:
+            - 80
+            - -20
+            pin_tap: 20
+            side: r
+            toggle_invert: false
+            type: Bit
+            type_properties: {}
+          Q#:
+            _index_: 1
+            default: 0
+            inverted: true
+            io: o
+            multi_source: false
+            pin_pos:
+            - 80
+            - 0
+            pin_tap: 20
+            side: r
+            toggle_invert: false
+            type: Bit
+            type_properties: {}
+          _index_: 100000
+        REG_CONTROL:
+          C:
+            _index_: 3
+            default: 0
+            function: clock
+            inverted: false
+            io: i
+            multi_source: false
+            pin_pos:
+            - -80
+            - 40
+            pin_tap: 20
+            side: l
+            toggle_invert: true
+            type: Bit
+            type_properties: {}
+          CE:
+            _index_: 2
+            default: 1
+            function: ce
+            inverted: false
+            io: i
+            multi_source: false
+            pin_pos:
+            - -80
+            - 20
+            pin_tap: 20
+            side: l
+            toggle_invert: true
+            type: Bit
+            type_properties: {}
+          RST:
+            _index_: 2
+            default: 0
+            function: reset
+            inverted: false
+            io: i
+            multi_source: false
+            pin_pos:
+            - 0
+            - 80
+            pin_tap: 20
+            side: b
+            toggle_invert: true
+            type: Bit
+            type_properties: {}
+          _index_: 100001
+        _h_pins_: 1
+        _v_pins_: 4
+      name: schedo:fd:1.0.1.0.0
+      ref_name: U1
+      ref_name_prefix: U
+      runner_actions:
+        set_value: {}
+        toggle_value:
+          enabled: true
+      sounds: {}
+    mode: schematic
+    order: 1
+    rotation: 0.0
+    scale: 1.0
+    x: 200
+    y: 120
+  U2:
+    data:
+      context:
+        _Q:
+          default: 0
+          properties: {}
+          type: Bit
+      creator_actions:
+        set_default_value:
+          function: set_default_value
+        toggle_default_value:
+          enabled: true
+          function: toggle_default_value
+      functions:
+        set_default_value:
+          args: {}
+          code: ''
+          language: js
+          targets: []
+        toggle_default_value:
+          args: {}
+          code: ''
+          language: js
+          targets: []
+      generics:
+        CE_pin: true
+        QINV_pin: true
+        init_value: 0
+        peak: 0
+        reset: true
+        reset_async: false
+        reset_priority: true
+        set: false
+        set_async: false
+        type: Bit
+        views_schematic_left_side_set_reset: false
+        width: 1
+      graphics:
+        _autobox_bottom_: 60
+        _autobox_left_: -60
+        _autobox_right_: 60
+        _autobox_top_: -40
+        _bbox_bottom_: 80
+        _bbox_left_: -80
+        _bbox_right_: 80
+        _bbox_top_: -40
+        _ibox_bottom_: 60
+        _ibox_left_: -60
+        _ibox_right_: 60
+        _ibox_top_: -40
+        areas:
+          state_toggler:
+            creator_gestures:
+              set_default_value:
+                action: set_default_value
+                kind: touch_long
+              toggle_default_value:
+                action: toggle_default_value
+                kind: touch_long
+            order: 0
+            runner_gestures:
+              set_value:
+                action: set_value
+                kind: touch_long
+              toggle_value:
+                action: toggle_value
+                kind: touch_long
+            shape:
+              height: 0
+              kind: box
+              width: 120
+              x: 0.5
+              y: 0.5
+        constants:
+        - set_side: false?'l':'t'
+        - reset_side: false?'l':'b'
+        customizable:
+        - enabled: true
+          items:
+          - enabled: true
+            long_text: Allocate set/reset pins on left side
+            name: left_side_set_reset
+            properties:
+              default: false
+              type: bool
+            short_text: Left-side set/reset
+          long_text: ''
+          name: pins_locations
+          short_text: Pins locations
+        default: true
+        functions:
+          box_color:
+            args:
+              default_color: config/views/schematic/items/box/fill_color
+              value: instance/io/Q/value
+            code: if (value == 1){ result = ""#A0DD70"" }else if (value == 0){ result
+              = ""#FF9090"" }else{ result = default_color }
+            language: js
+            sense:
+            - value
+            targets: instance/views/schematic/items/box/fill_color
+        generics:
+          left_side_set_reset: false
+        height: 100
+        io:
+        - group: DQ
+          hint:
+          - Flip-flop's data input and output
+          pins:
+          - pin: D
+          - pin: Q
+          - pin: Q#
+        - group: REG_CONTROL
+          hint:
+          - Flip-flop's control
+          pins:
+          - pin: CE
+          - pin: SET
+            side: t
+          - pin: PRESET
+            side: t
+          - pin: RST
+            side: b
+          - pin: CLR
+            side: b
+          - pin: C
+        items:
+          box:
+            item_data:
+              closed: true
+              fill: true
+              fill_color: '#FFFFFF'
+              kind: shape
+              path:
+              - - -60
+                - 60
+              - - -60
+                - -40
+              - - 60
+                - -40
+              - - 60
+                - 60
+              stroke: true
+              stroke_color: '#000000'
+              stroke_width: 4
+            layer: canvas
+            order: 0
+            shadow_blur: 5
+            shadow_color: '#CFCFCF'
+            shadow_offset_x: 5
+            shadow_offset_y: 5
+            x: 0.5
+            y: 0.5
+          partnumber:
+            item_data:
+              fill: true
+              fill_color: '#700000'
+              font: bold 16px sans-serif
+              h_align: 0.5
+              kind: text
+              text: FDRE
+              v_align: 0.5
+            layer: canvas
+            order: 1
+            rotation: -90
+            x: 0.5
+            y: 0.5
+          refdes:
+            item_data:
+              fill: true
+              fill_color: '#000070'
+              font: bold 16px sans-serif
+              h_align: 0.5
+              kind: text
+              text: U2
+              v_align: 0.5
+            layer: canvas
+            order: 2
+            x: 0.5
+            y: 20
+        width: 120
+      io:
+        C:
+          direction: in
+          function: clock
+          properties:
+            toggle_invert: true
+          signal:
+            default: 0
+            type: Bit
+        CE:
+          direction: in
+          enabled: true
+          function: ce
+          properties:
+            toggle_invert: true
+          relationship:
+            clock: C
+          signal:
+            default: 1
+            type: Bit
+        CLR:
+          direction: in
+          enabled: false
+          function: reset
+          properties:
+            toggle_invert: true
+          signal:
+            default: 0
+            type: Bit
+        D:
+          direction: in
+          relationship:
+            ce: CE
+            clock: C
+            reset: RST
+          signal:
+            default: 0
+            properties: {}
+            type: Bit
+        PRESET:
+          direction: in
+          enabled: false
+          function: reset
+          properties:
+            toggle_invert: true
+          signal:
+            default: 0
+            type: Bit
+        Q:
+          direction: out
+          relationship:
+            ce: CE
+            clock: C
+            reset: RST
+          signal:
+            default: 0
+            properties: {}
+            type: Bit
+        Q#:
+          direction: out
+          properties:
+            inverted: true
+          relationship:
+            ce: CE
+            clock: C
+            reset: RST
+          signal:
+            default: 0
+            properties: {}
+            type: Bit
+        RST:
+          direction: in
+          enabled: true
+          function: reset
+          properties:
+            toggle_invert: true
+          relationship:
+            clock: CLK
+          signal:
+            default: 0
+            type: Bit
+        SET:
+          direction: in
+          enabled: false
+          function: reset
+          properties:
+            toggle_invert: true
+          relationship:
+            clock: C
+          signal:
+            default: 0
+            type: Bit
+      io_list:
+        DQ:
+          D:
+            _index_: 0
+            default: 0
+            inverted: false
+            io: i
+            multi_source: false
+            pin_pos:
+            - -80
+            - -20
+            pin_tap: 20
+            side: l
+            toggle_invert: false
+            type: Bit
+            type_properties: {}
+          Q:
+            _index_: 0
+            default: 0
+            inverted: false
+            io: o
+            multi_source: false
+            pin_pos:
+            - 80
+            - -20
+            pin_tap: 20
+            side: r
+            toggle_invert: false
+            type: Bit
+            type_properties: {}
+          Q#:
+            _index_: 1
+            default: 0
+            inverted: true
+            io: o
+            multi_source: false
+            pin_pos:
+            - 80
+            - 0
+            pin_tap: 20
+            side: r
+            toggle_invert: false
+            type: Bit
+            type_properties: {}
+          _index_: 100000
+        REG_CONTROL:
+          C:
+            _index_: 3
+            default: 0
+            function: clock
+            inverted: false
+            io: i
+            multi_source: false
+            pin_pos:
+            - -80
+            - 40
+            pin_tap: 20
+            side: l
+            toggle_invert: true
+            type: Bit
+            type_properties: {}
+          CE:
+            _index_: 2
+            default: 1
+            function: ce
+            inverted: false
+            io: i
+            multi_source: false
+            pin_pos:
+            - -80
+            - 20
+            pin_tap: 20
+            side: l
+            toggle_invert: true
+            type: Bit
+            type_properties: {}
+          RST:
+            _index_: 2
+            default: 0
+            function: reset
+            inverted: false
+            io: i
+            multi_source: false
+            pin_pos:
+            - 0
+            - 80
+            pin_tap: 20
+            side: b
+            toggle_invert: true
+            type: Bit
+            type_properties: {}
+          _index_: 100001
+        _h_pins_: 1
+        _v_pins_: 4
+      name: schedo:fd:1.0.1.0.0
+      ref_name: U2
+      ref_name_prefix: U
+      runner_actions:
+        set_value: {}
+        toggle_value:
+          enabled: true
+      sounds: {}
+    mode: schematic
+    order: 1
+    rotation: 0.0
+    scale: 1.0
+    x: 460
+    y: 120
+wires:
+- - - U1
+    - Q
+    - U2
+    - D
+  - {}

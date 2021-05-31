@@ -1,0 +1,531 @@
+items:
+  U1:
+    data:
+      functions:
+        box_color:
+          code: if (Q == 1){ result = "theme:FillLogicOne" }else if (Q == 0){ result
+            = "theme:FillLogicZero" }else{ result = "theme:FillBlank" }
+          sense:
+            Q: functors.fd.context._Q
+          target: graphics.items.box.fill_color
+      functors:
+        fd:
+          context:
+            _Q:
+              default: null
+              type: bit
+          inputs:
+            C:
+              default: 0
+              kind: clock
+              type: bit
+            CE:
+              clock_domain: C
+              default: 1
+              enabled: true
+              kind: enable
+              type: bit
+            CLR:
+              default: 0
+              enabled: false
+              kind: reset
+              type: bit
+            D:
+              clock_domain: C
+              default: 0
+              dont_invert: true
+              type: bit
+            PRESET:
+              default: 0
+              enabled: false
+              kind: reset
+              type: bit
+            RST:
+              clock_domain: C
+              default: 0
+              enabled: true
+              kind: reset
+              type: bit
+            SET:
+              clock_domain: C
+              default: 0
+              enabled: false
+              kind: reset
+              type: bit
+          outputs:
+            Q:
+              bind:
+                code: result = _Q
+                sense: _Q
+              clock_domain: C
+              default: null
+              dont_invert: true
+              type: bit
+            Q#:
+              bind:
+                code: result = (type == 'bit')?(1-_Q):type == 'bool?(not _Q):type=='int'?(-_Q):type=='numeric'?(-_Q-1):'TODO:recursive
+                  not'
+                sense: _Q
+              clock_domain: C
+              default: null
+              dont_invert: true
+              enabled: true
+              type: bit
+          sense_and_code:
+            async:
+              args:
+              - __sense__
+              assign:
+              - _Q
+              code: if ((inputs.CLR==1) && (true || (inputs.PRESET==0))) {  context._Q
+                = 0}else if (inputs.PRESET==1) {  context._Q = 1}
+              named: []
+              sense:
+              - CLR
+              - PRESET
+            init:
+              code: context[_Q] == 0
+            sync:
+              args:
+              - __synced__
+              assign:
+              - _Q
+              code: if ((inputs.RST==1) && (true || (inputs.SET==0))) {  context._Q
+                = 0}else if (inputs.SET==1) {  context._Q = 1}else if {inputs.CE==1}
+                {  context._Q = D}
+              edge: r
+              named: []
+              sense:
+              - C
+      graphics:
+        _autobox_bottom_: 60
+        _autobox_left_: -60
+        _autobox_right_: 60
+        _autobox_top_: -40
+        _bbox_bottom_: 80
+        _bbox_left_: -80
+        _bbox_right_: 80
+        _bbox_top_: -40
+        _ibox_bottom_: 60
+        _ibox_left_: -60
+        _ibox_right_: 60
+        _ibox_top_: -40
+        items:
+          box:
+            closed: true
+            fill: true
+            fill_color: '#FFFFFF'
+            kind: shape
+            layer: canvas
+            order: 0
+            path:
+            - - -60
+              - 60
+            - - -60
+              - -40
+            - - 60
+              - -40
+            - - 60
+              - 60
+            shadow_blur: 5
+            shadow_color: '#CFCFCF'
+            shadow_offset_x: 5
+            shadow_offset_y: 5
+            stroke: true
+            stroke_color: '#000000'
+            stroke_width: 4
+            x: 0.5
+            y: 0.5
+          partnumber:
+            fill: true
+            fill_color: theme:PartNumber
+            font: bold 16px sans-serif
+            h_align: 0.5
+            kind: text
+            layer: canvas
+            order: 1
+            rotation: -90
+            text: FDRE
+            v_align: 0.5
+            x: 0.5
+            y: 0.5
+          refdes:
+            fill: true
+            fill_color: theme:RefName
+            font: bold 16px sans-serif
+            h_align: 0.5
+            kind: text
+            layer: canvas
+            order: 2
+            text: U1
+            v_align: 0.5
+            x: 0.5
+            y: 20
+      io_list:
+        _h_pins_: 1
+        _v_pins_: 4
+        core:
+          D:
+            _index_: 0
+            dont_invert: true
+            function: fd.D
+            inverted: false
+            io: i
+            kind: null
+            multi_source: false
+            pin_pos:
+            - -80
+            - -20
+            pin_tap: 20
+            side: l
+            type: bit
+          Q:
+            _index_: 0
+            dont_invert: true
+            function: fd.Q
+            inverted: false
+            io: o
+            kind: null
+            multi_source: false
+            pin_pos:
+            - 80
+            - -20
+            pin_tap: 20
+            side: r
+            type: bit
+          Q#:
+            _index_: 1
+            dont_invert: true
+            function: fd.Q#
+            inverted: false
+            io: o
+            kind: null
+            multi_source: false
+            pin_pos:
+            - 80
+            - 0
+            pin_tap: 20
+            side: r
+            type: bit
+          _index_: 0
+        reg:
+          C:
+            _index_: 3
+            dont_invert: false
+            function: fd.C
+            inverted: false
+            io: i
+            kind: clock
+            multi_source: false
+            pin_pos:
+            - -80
+            - 40
+            pin_tap: 20
+            side: l
+            type: bit
+          CE:
+            _index_: 2
+            dont_invert: false
+            function: fd.CE
+            inverted: false
+            io: i
+            kind: enable
+            multi_source: false
+            pin_pos:
+            - -80
+            - 20
+            pin_tap: 20
+            side: l
+            type: bit
+          RST:
+            _index_: 2
+            dont_invert: false
+            function: fd.RST
+            inverted: false
+            io: i
+            kind: reset
+            multi_source: false
+            pin_pos:
+            - 0
+            - 80
+            pin_tap: 20
+            side: b
+            type: bit
+          _index_: 999999
+      name: schedo:fd:1.0.1.0.0
+      ref_name: U1
+      ref_name_prefix: U
+    mode: schematic
+    order: 1
+    rotation: 0.0
+    scale: 1.0
+    x: 200
+    y: 120
+  U2:
+    data:
+      functions:
+        box_color:
+          code: if (Q == 1){ result = "theme:FillLogicOne" }else if (Q == 0){ result
+            = "theme:FillLogicZero" }else{ result = "theme:FillBlank" }
+          sense:
+            Q: functors.fd.context._Q
+          target: graphics.items.box.fill_color
+      functors:
+        fd:
+          context:
+            _Q:
+              default: null
+              type: bit
+          inputs:
+            C:
+              default: 0
+              kind: clock
+              type: bit
+            CE:
+              clock_domain: C
+              default: 1
+              enabled: true
+              kind: enable
+              type: bit
+            CLR:
+              default: 0
+              enabled: false
+              kind: reset
+              type: bit
+            D:
+              clock_domain: C
+              default: 0
+              dont_invert: true
+              type: bit
+            PRESET:
+              default: 0
+              enabled: false
+              kind: reset
+              type: bit
+            RST:
+              clock_domain: C
+              default: 0
+              enabled: true
+              kind: reset
+              type: bit
+            SET:
+              clock_domain: C
+              default: 0
+              enabled: false
+              kind: reset
+              type: bit
+          outputs:
+            Q:
+              bind:
+                code: result = _Q
+                sense: _Q
+              clock_domain: C
+              default: null
+              dont_invert: true
+              type: bit
+            Q#:
+              bind:
+                code: result = (type == 'bit')?(1-_Q):type == 'bool?(not _Q):type=='int'?(-_Q):type=='numeric'?(-_Q-1):'TODO:recursive
+                  not'
+                sense: _Q
+              clock_domain: C
+              default: null
+              dont_invert: true
+              enabled: true
+              type: bit
+          sense_and_code:
+            async:
+              args:
+              - __sense__
+              assign:
+              - _Q
+              code: if ((inputs.CLR==1) && (true || (inputs.PRESET==0))) {  context._Q
+                = 0}else if (inputs.PRESET==1) {  context._Q = 1}
+              named: []
+              sense:
+              - CLR
+              - PRESET
+            init:
+              code: context[_Q] == 0
+            sync:
+              args:
+              - __synced__
+              assign:
+              - _Q
+              code: if ((inputs.RST==1) && (true || (inputs.SET==0))) {  context._Q
+                = 0}else if (inputs.SET==1) {  context._Q = 1}else if {inputs.CE==1}
+                {  context._Q = D}
+              edge: r
+              named: []
+              sense:
+              - C
+      graphics:
+        _autobox_bottom_: 60
+        _autobox_left_: -60
+        _autobox_right_: 60
+        _autobox_top_: -40
+        _bbox_bottom_: 80
+        _bbox_left_: -80
+        _bbox_right_: 80
+        _bbox_top_: -40
+        _ibox_bottom_: 60
+        _ibox_left_: -60
+        _ibox_right_: 60
+        _ibox_top_: -40
+        items:
+          box:
+            closed: true
+            fill: true
+            fill_color: '#FFFFFF'
+            kind: shape
+            layer: canvas
+            order: 0
+            path:
+            - - -60
+              - 60
+            - - -60
+              - -40
+            - - 60
+              - -40
+            - - 60
+              - 60
+            shadow_blur: 5
+            shadow_color: '#CFCFCF'
+            shadow_offset_x: 5
+            shadow_offset_y: 5
+            stroke: true
+            stroke_color: '#000000'
+            stroke_width: 4
+            x: 0.5
+            y: 0.5
+          partnumber:
+            fill: true
+            fill_color: theme:PartNumber
+            font: bold 16px sans-serif
+            h_align: 0.5
+            kind: text
+            layer: canvas
+            order: 1
+            rotation: -90
+            text: FDRE
+            v_align: 0.5
+            x: 0.5
+            y: 0.5
+          refdes:
+            fill: true
+            fill_color: theme:RefName
+            font: bold 16px sans-serif
+            h_align: 0.5
+            kind: text
+            layer: canvas
+            order: 2
+            text: U2
+            v_align: 0.5
+            x: 0.5
+            y: 20
+      io_list:
+        _h_pins_: 1
+        _v_pins_: 4
+        core:
+          D:
+            _index_: 0
+            dont_invert: true
+            function: fd.D
+            inverted: false
+            io: i
+            kind: null
+            multi_source: false
+            pin_pos:
+            - -80
+            - -20
+            pin_tap: 20
+            side: l
+            type: bit
+          Q:
+            _index_: 0
+            dont_invert: true
+            function: fd.Q
+            inverted: false
+            io: o
+            kind: null
+            multi_source: false
+            pin_pos:
+            - 80
+            - -20
+            pin_tap: 20
+            side: r
+            type: bit
+          Q#:
+            _index_: 1
+            dont_invert: true
+            function: fd.Q#
+            inverted: false
+            io: o
+            kind: null
+            multi_source: false
+            pin_pos:
+            - 80
+            - 0
+            pin_tap: 20
+            side: r
+            type: bit
+          _index_: 0
+        reg:
+          C:
+            _index_: 3
+            dont_invert: false
+            function: fd.C
+            inverted: false
+            io: i
+            kind: clock
+            multi_source: false
+            pin_pos:
+            - -80
+            - 40
+            pin_tap: 20
+            side: l
+            type: bit
+          CE:
+            _index_: 2
+            dont_invert: false
+            function: fd.CE
+            inverted: false
+            io: i
+            kind: enable
+            multi_source: false
+            pin_pos:
+            - -80
+            - 20
+            pin_tap: 20
+            side: l
+            type: bit
+          RST:
+            _index_: 2
+            dont_invert: false
+            function: fd.RST
+            inverted: false
+            io: i
+            kind: reset
+            multi_source: false
+            pin_pos:
+            - 0
+            - 80
+            pin_tap: 20
+            side: b
+            type: bit
+          _index_: 999999
+      name: schedo:fd:1.0.1.0.0
+      ref_name: U2
+      ref_name_prefix: U
+    mode: schematic
+    order: 1
+    rotation: 0.0
+    scale: 1.0
+    x: 460
+    y: 120
+wires:
+- - - U1
+    - Q
+    - U2
+    - D
+  - {}

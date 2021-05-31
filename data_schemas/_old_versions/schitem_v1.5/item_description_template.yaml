@@ -1,0 +1,383 @@
+{
+  "<origin>:<name>:1.0.1.0.0": {
+    "format_version": [1,0,0],# Description format version [ <major_ver>, <minor_ver>, <revision> ]
+	"name": "<name>",         # Item name
+    "ref_name": "U",          # Schematic reference name prefix. 'U' is used if omitted
+	"origin": "<origin>",     # Origin of items (collection). Internal name or custom author's name
+    "kind":  "<kind>",        # Item's kind to gather items from different origins together
+    "version": [1,0,1,0,0],   # Version. Contains: [ <interface_major_ver>, <interface_minor_ver>, <impl_major_ver>, <impl_minor_ver>, <revision> ]
+    # IntefaceMajor - defines major interface version for item with name <name>  (set of signals, defaults and protocol)
+    # IntefaceMinor - defines minor interface version for item with name <name>  (set of signals, defaults and protocol)
+    # ArchitectureMajor - defines major implementation version for item with name <name>
+    # ArchitectureMinor - defines minor implementation version for item with name <name>
+    # Item can't be used for schematic item if any of it's major version differs from schematic's item
+    # Item can be used for schematic item if any it's minor versions greater or equal to schematic's item
+    # Revision is a number incremented lineary, starting from zero for each set of
+    #  [IntefaceMajor, InterfaceMinor, ArchitectureMajor, ArchitecureMinor] to indicate bugfixes
+    "hash": 0,                # Verification hash - hash for item with filled signature
+    "spec": [1,0,0],          # Used Specification Version: [ <specification_major_ver>, <specification_minor_ver>, <spec_revision> ]
+    "signature": [0,0,0,0],   # Cryptographic check signature: [ <key_index>, <signature>, <author_rights>, <verification_signature> ]
+    # KeyIndex - key index that vere used for signatures
+    # Hash1 - signature hash for item description with valid zeroed hashes
+    # Hash2 - author's signature hash for item with valid Hash1 field
+    # Hash3 - seal signature hash - filled for verified items
+    "version_history": {"1.0.1.0.0":"Initial version"},  # Versions chain and description for prevous and current versions
+    "thumbnail": "<image_data>",    # Thumbnail image data for items palette
+	"text_hint": "Logic AND gate",  # Realy short info about items to show in ballons, lists etc. to distinctly define item
+	"text_short": "...",            # Basic information about item - it's purpose, principles of action, interface description
+	"text_long": "...",             # Item backgeound info (it's place among other items)
+	"go_deep_ref": "url",           # Url to get into depth of item
+	"go_wide_ref": "url",           # Url to get more info about usage of item
+
+    # Customization options (are related to generics below)
+    "customizable": [ # Order defines order in gui
+      ["XO",{
+        "kind": "group",
+        "short_text":"<Display Name>",
+        "long_text":"<Description>",
+        "enabled": "${customizable}", # Can be disabled by other customizable options. If disabled then all items would have default values
+        "items":[  # Groups options
+        ["period", {
+          "kind": "value",
+          "type": "numeric",
+          "range": [2,10000,1],
+          "default": 1000,    # Value setup
+          "enabled":"${variable_period}",                                                         # Can be disabled by other customizable options. If disabled then would have default value
+          "short_text":"Period",
+          "long_text":"Defines output signal period, in time units",        # Value description
+          "target": "functors.CORE.generics.period"}],                                            # Object to apply value to
+        ["duty_cycle",{
+          "kind": "value",
+          "type": "numeric",
+          "range": [1,99],
+          "default": 50,        # Value setup
+          "short_text":"<Display Name>",
+          "long_text":"<Description>",                              # Value description
+          "target": "generics.duty_cycle"}]                                                       # Object to apply value to
+      ]}]
+    ],
+
+    "generics": {                   # List of item's generics (dict actually) that may be used in definitions
+      "part_number": "${_name_}_${type}", # Custom part number to be displayed on an item. Can be dynamic depending on generics. If not used then item's name would be used
+      "type": "BOOL",
+      "bus_width": 8
+    },
+
+    "constants": [                  # List of item's constants, calculated from generics in calculation order. Would be extrapolated into map
+      {"item_height":     "20 + ${bus_width} * 20"},  # Generics or constants values would be substituted in expression before evaluating it
+      {"pin_bus_width":   "${bus_width}!=1?3:1"}
+    ],
+    "graphics": {             # Options for graphic representation
+      # Graphics width and height. May be ommitted if all pins are placed automatically
+      "width":160,
+      "height": "${item_height}",  # Bounding box size (TODO: also use for graphics clipping?)
+      # List (dict) of graphics items (except pins)
+      "items": {
+        "<name>": {               # Just a distinct name
+            "layer": "canvas",    # Layer to be drawn: one of ["back", "canvas", "front", "canvas_top"]. NOTE: back and front are for images only
+            "order": 0,           # Drawing order. Item with hightest order is on top of others
+            "visible": true,      # Wherher to display item or not. true if omitted
+            "x": 0,               # Graphic item's position within item, horizontal. Integer is for absolute position (0 - left side of item), float is for relative position (0.0 - left side of item, 1.0 - right side of item)
+            "y": 0,               # Graphic item's position within item, vertical. Integer is for absolute position (0 - bottom side of item), float is for relative position (0.0 - bottom side of item, 1.0 - top side of item)
+            "rotation": 0,        # Graphic item's rotation angle
+            "scale_x": 1,         # Set horizontal scale
+            "scale_y": 1,         # Set vertical scale
+            "pivot_x": 0.5,       # Pivot point for item's position and rotation, horzontal
+            "pivot_y": 0.5,       # Pivot point for item's position and rotation, vertical
+            "kind": "image",      # Reource kind: one of ["image", "shape", "text", "touch"]
+          # Image specific part
+            "src": ["src1", "src2", "src3", "src4", "and so on..."],  # May contain multiple images  which are selected based on index
+            "glyphs": {
+              "0": {
+                "src_index":0,
+                "partial": true,
+                "x":0,
+                "y":0,
+                "width":10,
+                "height":10
+              }
+            },
+            "glyph": "0",         # Index of image source to display
+            "width": 100,         # Image width. Integer for absolute value, float for relative
+            "height": 100,        # Image height. Integer for absolute value, float for relative
+          # Shape specific part
+            "path": [[0,0],[1,1],[2,2],[1.0,1.0]],  # Points path. Integer for absolute value (positive integer values are offset to [left/bottom], negative integer values are offset to [right/top]), float for relative value
+            "closed": true,  # true if path should be closed, false otherwise
+          # Text specific part
+            "text": "some text here",   # Text itself
+            "font": "10px sans-serif",  # Font size and kind
+            "text_align": "center",     # ["start", "returnend", "left", "right", "center"]
+            "text_baseline": "middle",  # ["top", "hanging", "middle", "alphabetic", "ideographic"]
+          # Common for shape and text
+            "fill": true,    # true if path should be filled, false otherwise (for closed pathes only)
+            "fill_color": "#FFFFFF",    # ARGB color for fill
+            "stroke": true,             # true if path should be stroked, false otherwise
+            "stroke_color": "#000000",  # ARGB color for stroke
+            "stroke_width": 1,          # Line width for stroke
+          # Touch specific part
+            # NOTE: also uses width and height as image
+            "on_touch": {  # code to execute on actions. usualy it changes context or pins values of functors
+              "click": [],     # args: x, y of touch area, button
+              "press": [],     # args: x, y of touch area, button
+              "release": [],   # args: x, y of touch area, button
+              "drag_start": [],# args: start_x, start_y, dx, dy, button
+              "drag": [],      # args: start_x, start_y, dx, dy, button
+              "drag_stop": []  # args: start_x, start_y, dx, dy, button
+            },
+          # Common part
+            "hsv_mod": [0, 0, 0],       # Hue / Sat / Value modifications for image/fill/stroke colors. Integer for absolute values, float for relative values
+            "shadow_offset_x": 0,
+            "shadow_offset_y": 0,
+            "shadow_blur": 0,
+            "shadow_color": 0,
+            "anvil.works": {            # Implementation depended options
+              # Shape related
+              "stroke_cap": "square",   # ["butt", "round", "square"]
+              "stroke_join": "miter",   # ["round", "bevel", "miter"]
+              "miter_limit": 5
+            }
+
+        }
+      }
+    },
+    "functors": {
+      "<name>": {           # Just a distinct name
+        "generics": {       # Misc generics for functor (external params)
+          "kind": "bool",   # pairs of name / value
+          "width": "${bus_width}" # Actual value is defined by width generic
+        },
+        "inputs": {         # Input interface
+              "A%i": {
+                "type": "bool",
+                "%i:min": 0,
+                "%i:count": "${bus_width}",
+                "range": ["set", false, false],
+                "default": false
+              },  # set of allowed values
+              "B": {
+                "multi_source": false,  # That pin prohibits source to be connected to multiple pins
+                "enabled": false,       # Some pins may be disabled at all. When disabled then it isn't used in sense_and_code and graphic pins are omitted too
+                "dont_invert": true     # Force pin to be uninvertable (otherwise it depends on pin's type)
+              },
+              "S": {
+                "default": {
+                  "valid": true,
+                  "data": [1, 2, 3]
+                }
+              },  # Untyped values. May have dicts and lists as default value
+              "CLK": {
+                "type": "bit",         # types as bits and bool have native default range as set of [0, 1] and [false, true]
+                "inverted":true,      # an inversion may be applied to input/output or bidir
+                "kind":"clk"          # Available kinds: clk, reset, ce,
+              }
+          # TODO: add special group to check that automatically applied types (from wires connections) are corresponding to each other
+        },
+        "outputs": {        # Output interface
+              "O%i": {
+                "type": "int",
+                "%i:min": 0,
+                "%i:count": "${bus_width}",
+                "range": [  # discrete range of allowed values min/max/step
+                    "discrete",
+                    0,
+                    "${bus_width}",
+                    1
+                ],
+                "default": 4
+              },
+              "P": {
+                "multi_source": false # That pin can be connected to single pin only
+              },
+              "M": {  # Untyped values. If no default then values would be None
+                "bind": { # Code that binds value of this output to inputs and context
+                  "sense": ["S"],                # List of inputs and context that trigger binding
+                  "code": ["result = S"]         # Expressions. Finaly result should be stored in 'result' var
+                }
+              }
+        },
+        "bidir": {          # Bidirectional interface
+              "E%i": {
+                "type": "float",
+                "%i:min": 0,
+                "%i:count": "${bus_width}",
+                "range": ["range", 0, 10.0],  # continous range of allowed values
+                "default": {  # Outputs and Bidir have values may be a map with '_value_' and '_drive_' fields. If it's not then assumed that '_drive_' = True
+                  "_value_": 5.0,   # TODO:
+                  "_drive_": false  # TODO:
+                }
+              },
+              "H": {
+                "type": "copy:<name>.A0",     # DEPRECATED # Replicate type of A0
+                "bind_drive": {               # You may also bind drive my it self separately from value
+                  "sense": ["CLK"],
+                  "edge": "r",                # Binding may happen on edges too
+                  "code": ["result = SQ > 0"] # Result should be a bool or 0/1. (NOTE: other than 0/False/None are treated as bool)
+                }
+              }
+        },
+        "constants": [      # Misc constants that would be used in expressions (internal params)
+          {"is_bool": "kind == \"bool\""}  # pair of name-expression
+        ],
+        "context": {        # Context declaration
+              "AQ%i": {
+                "type": "bit",
+                "%i:min": 0,
+                "%i:count": "${bus_width}",
+                "default": 0
+              },
+              "SQ": {
+                "type": "binary",
+                "range": ["range", -128, 127],  # actual range would be discrete as type itself is discret
+                "default": 127
+              }
+        },
+        "sense_and_code": {
+          "init": {       # Special name 'init' to initialize values for context and outputs
+            "code": [     # List of code lines
+              "for (let i=0; i < width; i++) {",  # Here width referes to functor's generic width, not item's (for demonstration purpose)
+              "  outputs[\"O\"+i] = i;",  #outputs may be accessed via special var 'outputs' (https:#stackoverflow.com/questions/1711357/how-would-you-overload-the-operator-in-javascript)
+              "  context[\"AQ\"+i] = i;",  #same is also true for generics, constants, inputs, context and bidir
+              "}",
+              "SQ = 1;"                   #or objects may be accessed just by name except bidir output
+            ]
+          },
+          "sync": {       # Just a distinct name
+            "sense": ["CLK"],                    # Inputs and context which change triggers update
+            # args, assign and named helps to reduce function code so it would run smoother
+            # if args omitted then all available generics, constants, inputs and context are args to function
+            # if assign is omitted then it's treated that all outputs and context may be assigned
+            # if named is omitted then all args and assign would be accessed just by name (except bidir outputs)
+            "args": ["__synced__", "width"],     # Requires ALL synced inputs as args and also 'width' generic
+            "assign": [ # List of assigned values to speed up functions
+                "SQ",
+                "O",
+                {
+                  "%i":"AQ${_i_}",
+                  "%i:min": 0,
+                  "%i:count": "${bus_width}"
+                }
+            ],
+            "named": ["__all__"], # All args and outputs should be named
+            "edge": "r",          # edge to react: 'r' for rising, 'f' for falling, 'b' for both, ommit or '' for any change
+            "code": [
+              "for (let i=0; i < width; i++) {",
+              "  outputs[\"O\"+i] = inputs[\"A\"+i];",  #outputs may be accessed via special var 'outputs' (https:#stackoverflow.com/questions/1711357/how-would-you-overload-the-operator-in-javascript)
+              "  context[\"AQ\"+i] = inputs[\"A\"+i];",  #same is also true for generics, constants, inputs, context and bidir
+              "}",
+              "SQ = S;"                   #or objects may be accessed just by name except bidir output
+            ]
+          },
+          "async": {      # Just a distinct name
+            "sense": [
+              {
+                "%i":"A${_i_}",
+                "%i:min": 0,
+                "%i:count": "${bus_width}"
+              },
+              "AQ0"
+            ],
+            "args": [   # Requires all sensed values and S input as args  # NOTE: use __all__ to have all available
+                "__sense__",
+                "S"
+            ],
+            "assign": [
+                "H",
+                {
+                  "%i": "E${_i_}",
+                  "%i:min": 0,
+                  "%i:count": "${bus_width}"
+                }
+            ],
+            "code": [
+              "for (let i=0; i < ${bus_width}; i++) {",   # Just for example: parts of code may be replaced with item's generics, not functor's
+              "  if (S=1) {",
+              "    outputs[\"E\"+i] = inputs[\"A\"+i];",  #bidir outputs may be accessed only via special var 'outputs'
+              " }",
+              "}",
+              "outputs.H = AQ0;"
+            ]
+          }
+        }
+      }
+    },
+    "io_list": {          # Set of items IO pins
+            "<name>": {   # Groups pins. Key is used as lias for references
+                "_index_": 0,
+                "S": {                     # Pin name
+                  "function": "<name>.S",  # Bind to functor <name> input S. May be omitted if only one functor have pin named "S"
+                  "pin_pos":[0, 60],       # Custom Pin position. Two integer values for absolute positioning, two float values relative positioning. Single integer or float to place pin according to it's side
+                  "side":"l",              # Custom Pin side (by default inputs are on left, outputs on right. Pin related text positions depends on side too)
+                  "pin_tap":46,            # Custom Pin tap length
+                  "text_offset":[-51,10]   # Pin name text offset relative to pin position. Single integer to define offset depending on pin's side (+x for left, -x for right, -y for top, +y for bottom)
+                },
+                "A%i": {                   # These pins would be placed automatically and would be binded with functor's pins A0, A1 and so on
+                  "_index_": "${_i_}",       # Required for automatic placement. Would be replaced with if %i
+                  "%i:min": 0, "%i:count": "${bus_width}",
+                  "bus_width": "${pin_bus_width}" # Defines Weight (width) of Pin tap
+                },
+                "H": {
+                  "_index_": "@`${bus_width}+1`",  # Required for automatic placement
+                  "display": false         # pins can be hidden
+                },
+                "Y": {
+                  "function": "<name>.M",
+                  "pin_pos":[160, 40],
+                  "side":"r",
+                  "pin_tap":46,
+                  "text_offset":[46,10]
+                }
+            }
+    },
+
+    "functions": {
+      "context": {              # Context to save between call
+        "<name>": "<value>"
+      },
+      "shape_color": {   # Distinct name
+        "sense": {  # Key is arg for function, value is path to item's internals. '.' is hierarchy separator
+          "S": "functors.<name>.inputs.S",
+          "A0": "functors.<name>.inputs.A0"
+        },
+        "sense_set": [  # You may set list of values sets. If no edge defined, then function is called only in case if values of any item from sense set are matching actual ones
+          {
+            "S": 1
+          }
+        ],
+        "edge": "r",  #When edge is defined, function would be called only in case if values match any sense_set ('r') of when stopped matching ('f') or in both cases ('b')
+        "target": "graphics.items.<shape>.fill_color", # Target to apply function result to
+        "code": [ # Code to run when values are changed. Edge may be used to produce
+          "if (A0 == 1)",
+          "{ result = \"#00FF00\" }",
+          "else if (A0 == 0)",
+          "{ result = \"#FF0000\" }",
+          "else",
+          "{ result = \"#FFFFFF\" }"
+        ]
+      }
+    }
+  }
+},
+
+# Notes about %i and %e generators:
+{
+    "A%i": {      # Template pin name (for generating multiple pins)
+                  # %i - integer iterator
+      "%i.min": 1,   # min value for %i iterator
+      "%i.max": 32,    # max value for %i iterator
+      "%i.maxe": 33,   # max value for %i iterator, not included into result. Useful for indices starting from 0
+      "%i.count": 31,  # values count for %i iterator. Useful as not depends on start index
+      "%i.step": 1,    # values step for %i iterator
+      "key": "${_i_}"  # ${_i_} would be substituted with iteration
+    },
+    "A%e": {      # Template pin name (for generating multiple pins)
+                  # %e - enumerable iterator
+      "%e.list": "1,2,3"   # values list for %e iterator
+    },
+    "B%i": { # Generate items within list. Form 1
+      "%i": null,           # If specified as null then items would be dicts
+    },
+    "C%i": { # Generate items within list. Form 2
+      "%i": "Item[${_i_}]",   # If specified like this then items would be scalars (result of eval/subst actually) like Item[0], Item[1], etc.
+      "-same-as-for-A%i"
+    }
+}
