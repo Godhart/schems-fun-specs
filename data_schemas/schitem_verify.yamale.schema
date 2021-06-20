@@ -98,7 +98,8 @@ customizable_group:
   name: str()         # Group name for referencing. Should be unique among all groups and values
   short_text: str()   # Short text for GUI (display name for this group)
   long_text: str()    # Detailed text for GUI
-  enabled: str(required=False) # If specified, then it contains expression that is verified against True/False. Expression contains names of other groups and values  [None:'true']
+  basic: bool(required=False)   # Whether or not fields of this group should be displayed in basic settings view [None:'false']
+  enabled: str(required=False)  # If specified, then it contains expression that is verified against True/False. Expression contains names of other groups and values  [None:'true']
   items: list(include('customizable_group'), include('customizable_value')) # Group content - customizable values and subgroups. Item's order is used for GUI dialog creation
 
 ---
@@ -107,6 +108,7 @@ customizable_value:
   name: str()         # Value name for referencing. Should be unique among all groups and values
   short_text: str()   # Short text for GUI (display name for this value)
   long_text: str()    # Detailed text for GUI
+  basic: bool(required=False)   # Whether or not this field should be displayed in basic settings view [None:'false']
   enabled: str(required=False)  # If specified, then it contains expression that is verified against True/False. Expression contains names of other groups and values  [None:'true']
   properties: include('customizable_value_any')
   target: str(required=False)   # Generic target in format 'generics.<generic_name>' to apply this value to. If omitted then it's 'generics.<value_name>'
