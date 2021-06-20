@@ -149,11 +149,15 @@ customizable_value_bool:
 ---
 customizable_value_string:
   type: enum('string')
-  values: str(required=False)                   # Regex for validation
+  values: include('string_value', required=False)  # String validation info
   allow_none: any(str(), bool(),required=False) # [None:False]
   multiline: any(str(), bool(), required=False) # [None:False] True if multiline values should be allowed
   default: any(str(), null(), str())            # [None:'']
-
+---
+string_value:
+  regex: str()                                  # Regex for string validation
+  hint:  str()                                  # Hint about allowed values
+  
 ---
 customizable_value_bstring:
   type: enum('bstring')                         # NOTE: binary string. Allows only SpinalHDL-like binary strings

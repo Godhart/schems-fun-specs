@@ -149,10 +149,14 @@ customizable_value_bool:
 ---
 customizable_value_string:
   type: enum('string')
-  values: str(required=False)                   # Regex for validation
+  values: include('string_value', required=False)  # String validation info
   allow_none: bool(required=False)              # [None:False]
   multiline: bool(required=False)               # [None:False] True if multiline values should be allowed
   default: any(null(), str())                   # [None:'']
+---
+string_value:
+  regex: str()                                  # Regex for string validation
+  hint:  str()                                  # Hint about allowed values
 
 ---
 customizable_value_bstring:
